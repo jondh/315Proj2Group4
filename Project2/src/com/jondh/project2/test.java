@@ -14,15 +14,19 @@ public class test {
 	 */
 	public static void main(String[] args) throws ScriptException {
 		ArrayList<String> vars = new ArrayList<String>();
+		vars.add("D");
 		ASTtree tree = new ASTtree();
 		ASTtree.ASTnode node = tree.new ASTnode();
-		ASTtree.ASTnode.ASTread read = node.new ASTread(vars);
+		tree.root = node;
+		ASTtree.ASTread read = tree.new ASTread(vars, 10);
+		ASTtree.ASTlet let = tree.new ASTlet("D","535+6",20);
 		node.leftnode = read;
-		read.eval();
+		node.rightnode = let;
+		node.eval();
 		node.print();
-		ScriptEngineManager mgr = new ScriptEngineManager();
-	    ScriptEngine engine = mgr.getEngineByName("JavaScript");
-	    System.out.println(engine.eval("7-5*(8-4)"));
+//		ScriptEngineManager mgr = new ScriptEngineManager();
+//	    ScriptEngine engine = mgr.getEngineByName("JavaScript");
+//	    System.out.println(engine.eval("7-5*(8-4)"));
 	}
 
 }
