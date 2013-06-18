@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+
 /* UPDATE: READ, LET, DATA, and PRINT implemented
  *  Let eval() puts out a dummy value
  *  I'm not sure about the eval() and print() iteration yet
@@ -17,7 +21,11 @@ import java.util.Map;
 public class ASTtree {
 	ArrayList<Double> data = new ArrayList<Double>();
 	Map<String, Double> var = new HashMap<String, Double>();
+	Map<Integer, ASTnode> nodes = new HashMap<Integer, ASTnode>();
 	ASTnode root = null;
+	
+	ScriptEngineManager mgr = new ScriptEngineManager();
+    ScriptEngine engine = mgr.getEngineByName("JavaScript");
 	
 	//This class defines the nodes of the tree; it contains
 	//	subclass implementations of each node to be used in
@@ -55,6 +63,7 @@ public class ASTtree {
 		ASTread(ArrayList<String> vars, int lnNum){
 			linenumber = lnNum;
 			variables = vars;
+			nodes.put(lnNum, this);
 		}
 		public boolean eval(){
 			for(int i = 0; i < variables.size(); i++){
@@ -93,12 +102,21 @@ public class ASTtree {
 			linenumber = lnNum;
 			equal = leftEq;
 			expr = rightEq;
+			nodes.put(lnNum, this);
 		}
 		
 		public boolean eval(){
-			var.put(equal, 46.5);
-			if(leftnode == null) return false;
-			leftnode.eval();
+			Double evalExpr = 0.0;
+			try {
+				evalExpr = (Double) engine.eval(putValuesIn(expr));
+			} catch (ScriptException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			var.put(equal, evalExpr);
+			if(leftnode != null){
+				leftnode.eval();
+			}
 			if(rightnode == null) return false;
 			rightnode.print();
 			return true;
@@ -125,6 +143,7 @@ public class ASTtree {
 		ASTdata(ArrayList<Double> dataIn, int lnNum){
 			linenumber = lnNum;
 			input = dataIn;
+			nodes.put(lnNum, this);
 			for(int i = 0; i < dataIn.size(); i++){
 				data.add(dataIn.get(i));
 			}
@@ -153,10 +172,12 @@ public class ASTtree {
 		ASTprint(String statement, int lnNum){
 			expr = statement;
 			linenumber = lnNum;
+			nodes.put(lnNum, this);
 		}
 		public ASTprint(ArrayList<String> SvarsIn, int lnNum){
 			variables = SvarsIn;
 			linenumber = lnNum;
+			nodes.put(lnNum, this);
 		}
 		public boolean eval(){
 			if(expr == ""){
@@ -193,6 +214,116 @@ public class ASTtree {
 			rightnode.print();
 			return true;
 		}
+	}
+
+	public class ASTgoto extends ASTnode{
+		int gotoNode = 0;
+		
+		ASTgoto(int go, int lnNum){
+			gotoNode = go;
+			linenumber = lnNum;
+			nodes.put(lnNum, this);
+		}
+		
+		public boolean eval(){
+			if(nodes.containsKey(gotoNode)){
+				nodes.get(gotoNode).eval();
+			}
+			else{
+				System.out.println("The node "+gotoNode+" does not exist. From GOTO");
+				return false;
+			}
+			return true;
+		}
+		
+		public boolean print(){
+			System.out.println(linenumber+" GOTO "+gotoNode);
+			if(leftnode == null) return false;
+			leftnode.print();
+			if(rightnode == null) return false;
+			rightnode.print();
+			return true;
+		}
+	}
+
+	public class ASTif extends ASTnode{
+		String conditional = "";
+		int gotoNode = 0;
+		
+		ASTif(String statement, int go, int lnNum){
+			gotoNode = go;
+			conditional = statement;
+			linenumber = lnNum;
+			nodes.put(lnNum, this);
+		}
+		
+		public boolean eval(){
+			boolean cond = false;
+			// Runs the conditional in javascript, throws scripting exception
+		    try {
+				if((boolean) engine.eval(putValuesIn(conditional))){
+					cond = true;
+				}
+			} catch (ScriptException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if(cond){ // TODO if inputted statement is true
+				if(nodes.containsKey(gotoNode)){
+					nodes.get(gotoNode).eval();
+				}
+				else{
+					System.out.println("The node "+gotoNode+" does not exist. From IF THEN");
+					return false;
+				}
+			}
+			else{
+				if(leftnode == null) return false;
+				leftnode.eval();
+				if(rightnode == null) return false;
+				rightnode.print();
+			}
+			return true;
+		}
+		
+		public boolean print(){
+			System.out.println(linenumber+" IF "+conditional+" THEN "+gotoNode);
+			if(leftnode == null) return false;
+			leftnode.print();
+			if(rightnode == null) return false;
+			rightnode.print();
+			return true;
+		}
+	}
+	
+	
+	// This takes an input expression with variables and
+	// outputs the expression with the varaiables converted to
+	// their values.
+	protected String putValuesIn(String expr){
+		String convert = "";
+		for(int i = 0; i < expr.length(); i++){
+			String varAt = "";
+			if(expr.charAt(i)>='A' && expr.charAt(i)<='Z'){
+				varAt += expr.charAt(i);
+				if(i < expr.length()-1){
+					if(expr.charAt(i+1)>='0' && expr.charAt(i+1)<='9'){
+						varAt += expr.charAt(i+1);
+						i++;
+					}
+				}
+				if(var.containsKey(varAt)){
+					convert += " "+var.get(varAt);
+				}
+				else{
+					convert += "NaN";
+				}
+			}
+			else{
+				convert += expr.charAt(i);
+			}
+		}
+		return convert;
 	}
 }
 
