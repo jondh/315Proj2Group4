@@ -39,8 +39,8 @@ public class test {
 		pr55.add("X1");
 		pr55.add("X2");
 		ASTtree tree = new ASTtree();
-		ASTtree.ASTnode root = tree.new ASTnode();
-		tree.root = root;
+//		ASTtree.ASTnode root = tree.new ASTnode();
+//		tree.root = root;
 		ASTtree.ASTread read10 = tree.new ASTread(vars, 10);
 		ASTtree.ASTlet let15 = tree.new ASTlet("D","A1*A4-A3*A2",15);
 		ASTtree.ASTif if20 = tree.new ASTif("D == 0", 65, 20);
@@ -53,22 +53,33 @@ public class test {
 		ASTtree.ASTdata d70 = tree.new ASTdata(data70,70);
 		ASTtree.ASTdata d80 = tree.new ASTdata(data80,80);
 		ASTtree.ASTdata d85 = tree.new ASTdata(data85,85);
+		ASTtree.ASTfor for90 = tree.new ASTfor("I","10","0",-1.0,90);
+		ArrayList<String> pr95 = new ArrayList<String>();
+		pr95.add("I");
+		ASTtree.ASTprint print95 = tree.new ASTprint(pr95,95);
+		ASTtree.ASTnext next100 = tree.new ASTnext("I",100);
+		ASTtree.ASTprint print105 = tree.new ASTprint("YEA!",105);
 		
-		root.leftnode = read10;
+		tree.root.leftnode = read10;
 		read10.leftnode = let15;
 		let15.leftnode = if20;
 		if20.leftnode = read30;
 		read30.leftnode = let37;
 		let37.leftnode = let42;
 		let42.leftnode = print55;
-		print55.leftnode = goto60;
-		goto60.leftnode = print65;
+		print55.leftnode = print65;
+//		print55.leftnode = goto60;
+//		goto60.leftnode = print65;
 		print65.leftnode = d70;
 		d70.leftnode = d80;
 		d80.leftnode = d85;
+		d85.leftnode = for90;
+		for90.rightnode = print95;
+		print95.leftnode = next100;
+		for90.leftnode = print105;
 		
-		root.eval();
-		root.print();
+		tree.root.eval();
+		tree.print();
 	}
 
 }
