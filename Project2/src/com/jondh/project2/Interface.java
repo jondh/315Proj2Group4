@@ -1,3 +1,5 @@
+package com.jondh.project2;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -125,7 +127,6 @@ public class Interface extends BasicInterpreter {
 		public Vector<String> sortVectStrings(Vector<String> vect) {
 			Collections.sort(vect, new Comparator<String>()
 					{
-				@Override
 				public int compare(String s1, String s2) {
 					String num1 = " ";
 					String num2 = " ";
@@ -214,19 +215,15 @@ public class Interface extends BasicInterpreter {
 			win.setVisible(true);
 		}
 
-		@Override
 		public void changedUpdate(DocumentEvent e) {
 		}
 
-		@Override
 		public void insertUpdate(DocumentEvent e) {
 		}
 
-		@Override
 		public void removeUpdate(DocumentEvent e) {
 		}
 
-		@Override
 		public void actionPerformed(ActionEvent e) {
 			if ("LISTPROGRAM".equals(e.getActionCommand())) {
 				System.out.println("ListProgram clicked");

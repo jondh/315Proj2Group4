@@ -1,3 +1,5 @@
+package com.jondh.project2;
+
 
 public enum TokenType {
 		WORD, NUMBER, STRING, LABEL, LINE,

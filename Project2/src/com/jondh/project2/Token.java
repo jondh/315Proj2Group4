@@ -1,3 +1,5 @@
+package com.jondh.project2;
+
 
 public class Token {
 		public Token(String text, TokenType type) {
