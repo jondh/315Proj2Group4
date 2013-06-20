@@ -8,11 +8,10 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-/* UPDATE: READ, LET, DATA, PRINT, GOTO, IF THEN, FOR, NEXT
- * 		   implemented to some degree.
- * Current structure of tree: Every node by default only has
- * 		a leftnode, leading to a linear tree. The FOR statement
- * 		has a rightnode which is the loop portion of the statement.
+/* 
+ * Current structure of tree: Every node (except FOR) should only use its
+ * 		leftnode, leading to a linear tree. The FOR statement uses its
+ * 		rightnode for the loop portion of the statement.
  */
 
 
@@ -23,6 +22,7 @@ public class ASTtree {
 	Map<String, Double> var = new HashMap<String, Double>();
 	Map<Integer, ASTnode> nodes = new HashMap<Integer, ASTnode>();
 	Map<String, ASTnode> forNodes = new HashMap<String, ASTnode>();
+	String strBuffer = "";
 	ASTnode returnNode = null;
 	ASTnode root;
 	
@@ -85,6 +85,13 @@ public class ASTtree {
 		}
 	}
 	
+	/*
+	 *  This class reads data values into variables. The variables should
+	 *  	be imported in the constructor contained in an ArrayList of 
+	 *  	strings where each string is a variable. This class assumes
+	 *  	that each string contains exactly one valid BASIC variable.
+	 *  	The linenumber should also be included in the constructor.
+	 */
 	public class ASTread extends ASTnode{
 		ArrayList<String> variables = new ArrayList<String>();
 		//--Constructor--//
@@ -115,6 +122,12 @@ public class ASTtree {
 		}
 	}
 	
+	/*
+	 *  This class evaluates an expression and puts a variable equal to it.
+	 *  	The constructor needs a string that represents the variable that
+	 *  	the expression is equal to (leftEq), a string that is the expression
+	 *  	that is to be evaluated (rightEq), and the linenumber.
+	 */
 	public class ASTlet extends ASTnode{
 		String equal;
 		String expr;
@@ -128,29 +141,22 @@ public class ASTtree {
 		}
 		
 		public boolean eval(){
-			Double evalExpr = 0.0;
-			try {
-				evalExpr = (Double) engine.eval(putValuesIn(expr));
-			} catch (ScriptException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			var.put(equal, evalExpr);
+			var.put(equal, evalExpr(expr));
 			if(leftnode != null){
 				leftnode.eval();
 			}
-//			if(rightnode == null) return false;
-//			rightnode.eval();
 			return true;
 		}
 	}
 
+	/*
+	 *  This class puts data into the data buffer to be used during read.
+	 *  	The constructor expects an ArrayList of doubles corresponding
+	 *  	to the data and its order. It also expects the linenumber.
+	 */
 	public class ASTdata extends ASTnode{
 		ArrayList<Double> input = new ArrayList<Double>();
 		
-		// The constructor puts the data into the data list
-		//	so that it is avilable from the beginning of the 
-		//	program.
 		ASTdata(ArrayList<Double> dataIn, int lnNum){
 			linenumber = lnNum;
 			input = dataIn;
@@ -166,43 +172,66 @@ public class ASTtree {
 		}
 	}
 
+	/*
+	 *  This class prints out things according to BASIC standards. 
+	 *  	The constructor expects an ArrayList of printStruct and 
+	 *  	a linenumber. printStruct is a class defined in the class 
+	 *  	ASTtree, so an ASTtree is needed to use it. EX.
+	 *  	ASTtree.ASTprintStruct prName = tree.new ASTprintStruct(String expression, char endType);
+	 *  		where endType is a comma, semicolon or space
+	 */
 	public class ASTprint extends ASTnode{
-		String expr = "";
-		ArrayList<String> variables = new ArrayList<String>();
+		ArrayList<printStruct> items = new ArrayList<printStruct>();
 		
-		ASTprint(String statement, int lnNum){
-			expr = statement;
-			linenumber = lnNum;
-			nodes.put(lnNum, this);
-			programLine += linenumber+" PRINT \""+expr+"\"";
-		}
-		public ASTprint(ArrayList<String> SvarsIn, int lnNum){
-			variables = SvarsIn;
+		ASTprint(ArrayList<printStruct> stateList, int lnNum){
+			items = stateList;
 			linenumber = lnNum;
 			nodes.put(lnNum, this);
 			programLine += linenumber+" PRINT ";
-			for(int i = 0; i < variables.size(); i++){
-				programLine += variables.get(i);
-				if(i < variables.size()-1) programLine += ", ";
+			for(int i = 0; i < items.size(); i++){
+				programLine += items.get(i).statement + items.get(i).lineType;
 			}
 		}
+		
 		public boolean eval(){
-			if(expr == ""){
-				for(int i = 0; i < variables.size(); i++){
-					if(!var.containsKey(variables.get(i))){ return false; } // TODO error: variable not initialized
-					System.out.print(variables.get(i)+" = ");
-					System.out.print(var.get(variables.get(i))+"\n");
+			ArrayList<String> evalSplit = new ArrayList<String>();
+			for(int j = 0; j < items.size(); j++){
+				evalSplit = splitExpression(items.get(j).statement);
+				
+				for(int i = 0; i < evalSplit.size(); i++){
+					if(evalSplit.get(i).charAt(0) == '"'){
+						strBuffer += evalSplit.get(i).replace("\"", "");
+					}
+					else{
+						strBuffer += evalExpr(evalSplit.get(1));
+					}
+				}
+				if(items.get(j).lineType == ','){
+					for(int k = 0; k < strBuffer.length()%15; k++){
+						strBuffer += ' ';
+					}
+				}
+				else if(items.get(j).lineType == ';'){
+					int k = 0;
+					while(k < 2 || strBuffer.length()%3 != 0){
+						strBuffer += ' ';
+						k++;
+					}
 				}
 			}
-			else{
-				System.out.print(expr + "\n");
-			}
+			
+			System.out.println(linenumber + " "  +strBuffer);
+			strBuffer = "";
 			if(leftnode == null) return false;
 			leftnode.eval();
 			return true;
 		}
 	}
 
+	/*
+	 *  This class gos to an inputted line. This constructor contains
+	 *  	the line to go to (int) as well as its own linenumber.
+	 */
 	public class ASTgoto extends ASTnode{
 		int gotoNode = 0;
 		
@@ -225,6 +254,12 @@ public class ASTtree {
 		}
 	}
 
+	/*
+	 *  This class goes to a line if a condition is met. The constructor 
+	 *  	expects the statement to be tested (string), the line to go
+	 *  	to (int), and its own linenumber. The string to be tested should
+	 *  	contain a valid BASIC relation and valid BASIC variables.
+	 */
 	public class ASTif extends ASTnode{
 		String conditional = "";
 		int gotoNode = 0;
@@ -267,6 +302,16 @@ public class ASTtree {
 		}
 	}
 	
+	/*
+	 *  This class initializes a variable to an exression, runs until the
+	 *  	variable reaches a condition, and steps the variable by an amount
+	 *  	each iteration. Paired with a NEXT (var) statement to iterate.
+	 *  	The constructor expects a String containing only the variable(nVar),
+	 *  	a String containing an expression for what the variable is initialized
+	 *  	to (nIni), a String contaning an expression for what the variable
+	 *  	is allowed to reach befor the loop stops (toCond), a Double contaning
+	 *  	what the variable is stepped by (step), and its own linenumber.
+	 */
 	public class ASTfor extends ASTnode{
 		/* This for loop runs the rightnode whenever the condition
 		 * is true. The end of the righnode should contain a next
@@ -329,6 +374,12 @@ public class ASTtree {
 		}
 	}
 	
+	/*
+	 *  This class returns the program execution to the FOR statement
+	 *  associated with the inputted variable. The constructor expects
+	 *  a String containing exactly the variable associted with the FOR
+	 *  statement, and its own linenumber.
+	 */
 	public class ASTnext extends ASTnode{
 		String forVar;
 		
@@ -351,6 +402,11 @@ public class ASTtree {
 		}
 	}
 	
+	/*
+	 *  This class goes to a line and then comes back once a RETURN
+	 *  statement is found. This constructor expects the line to go
+	 *  to and its own linenumber.
+	 */
 	public class ASTgosub extends ASTnode{
 		int gotoLine;
 		
@@ -373,6 +429,10 @@ public class ASTtree {
 		}
 	}
 	
+	/*
+	 *  This class returns back to the last GOSUB line. The constructor
+	 *  expects only its own linenumber.
+	 */
 	public class ASTreturn extends ASTnode{
 		
 		ASTreturn(int lnNum){
@@ -388,6 +448,10 @@ public class ASTtree {
 		
 	}
 	
+	/*
+	 *  The class ends execution. Its constructor expects only its
+	 *  linenumber.
+	 */
 	public class ASTend extends ASTnode{
 		ASTend(int lnNum){
 			linenumber = lnNum;
@@ -400,15 +464,23 @@ public class ASTtree {
 		}
 	}
 	
+	protected Double evalExpr(String expr){
+		Double evalExpr = 0.0;
+		try {
+			evalExpr = (Double) engine.eval(putValuesIn(expr));
+		} catch (ScriptException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return evalExpr;
+	}
+	
 	/*
 	 * 	This function takes in a string with variables and functions.
 	 * 	 It returns the same string with the variables replaced with 
 	 *   their current values and the function replaces with equivalent
 	 *   functions readable by JavaScript.
 	 */
-	// This takes an input expression with variables and
-	// outputs the expression with the varaiables converted to
-	// their values.
 	protected String putValuesIn(String expr){
 		String convert = "";
 		boolean function = false;
@@ -442,11 +514,19 @@ public class ASTtree {
 				convert += expr.charAt(i);
 			}
 		}
-		System.out.println(convert);
-		System.out.println(replaceFunctions(convert));
 		return replaceFunctions(convert);
 	}
 
+	public class printStruct{
+		String statement;
+		char lineType;
+		
+		printStruct(String pr, char l){
+			statement = pr;
+			lineType = l;
+		}
+	}
+	
 	private class FuncData{
 		String funcIn;
 		String funcOut;
@@ -505,7 +585,6 @@ public class ASTtree {
 					pare--;
 				}
 				pos++;
-				System.out.println(nextEpr);
 			}
 		}
 		else{
@@ -539,6 +618,33 @@ public class ASTtree {
 			return true;
 		}
 		else return false;
+	}
+
+	protected ArrayList<String> splitExpression(String expr){
+		ArrayList<String> parts = new ArrayList<String>();
+		for(int i = 0; i < expr.length(); i++){
+			if(expr.charAt(i) == '"'){
+				String quote = "" + expr.charAt(i);
+				i++;
+				while(expr.charAt(i) != '"'){
+					quote += expr.charAt(i);
+					i++;
+					if(i == expr.length()-1) break;
+				}
+				quote += expr.charAt(i);
+				parts.add(quote);
+			}
+			else{
+				String ex = "";
+				while(expr.charAt(i)!='"' && i<expr.length()-1){
+					ex += expr.charAt(i);
+					i++;
+				}
+				ex += expr.charAt(i);
+				parts.add(ex);
+			}
+		}
+		return parts;
 	}
 }
 
