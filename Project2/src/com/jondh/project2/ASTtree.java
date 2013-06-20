@@ -261,7 +261,7 @@ public class ASTtree {
 			boolean cond = false;
 			// Runs the conditional in javascript, throws scripting exception
 		    try {
-				if((boolean) engine.eval(putValuesIn(conditional))){
+				if((Boolean) engine.eval(putValuesIn(conditional))){
 					cond = true;
 				}
 			} catch (ScriptException e) {
