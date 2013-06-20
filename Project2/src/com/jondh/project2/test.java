@@ -46,17 +46,22 @@ public class test {
 		ASTtree.ASTif if20 = tree.new ASTif("D == 0", 65, 20);
 		ASTtree.ASTread read30 = tree.new ASTread(vars30,30);
 		ASTtree.ASTlet let37 = tree.new ASTlet("X1","(B1*A4-B2*A2)/D",37);
-		ASTtree.ASTlet let42 = tree.new ASTlet("X2","(A1*B2-A3*B1)/D",42);
+		ASTtree.ASTlet let42 = tree.new ASTlet("X2","RND(65.43)",42);
 		ASTtree.ASTprint print55 = tree.new ASTprint(pr55,55);
 		ASTtree.ASTgoto goto60 = tree.new ASTgoto(30,60);
 		ASTtree.ASTprint print65 = tree.new ASTprint("NO UNIQUE SOLUTION",65);
 		ASTtree.ASTdata d70 = tree.new ASTdata(data70,70);
 		ASTtree.ASTdata d80 = tree.new ASTdata(data80,80);
 		ASTtree.ASTdata d85 = tree.new ASTdata(data85,85);
-		ASTtree.ASTfor for90 = tree.new ASTfor("I","10","0",-1.0,90);
+		ASTtree.ASTfor for90 = tree.new ASTfor("I","0","5",1.0,90);
 		ArrayList<String> pr95 = new ArrayList<String>();
 		pr95.add("I");
 		ASTtree.ASTprint print95 = tree.new ASTprint(pr95,95);
+		ASTtree.ASTfor for96 = tree.new ASTfor("J","0","COS(0)",1.0,96);
+		ArrayList<String> pr97 = new ArrayList<String>();
+		pr97.add("J");
+		ASTtree.ASTprint print97 = tree.new ASTprint(pr97,97);
+		ASTtree.ASTnext next98 = tree.new ASTnext("J",98);
 		ASTtree.ASTnext next100 = tree.new ASTnext("I",100);
 		ASTtree.ASTprint print105 = tree.new ASTprint("YEA!",105);
 		
@@ -75,11 +80,22 @@ public class test {
 		d80.leftnode = d85;
 		d85.leftnode = for90;
 		for90.rightnode = print95;
-		print95.leftnode = next100;
+		print95.leftnode = for96;
+		for96.leftnode = next100;
+		for96.rightnode = print97;
+		print97.leftnode = next98;
 		for90.leftnode = print105;
 		
-		tree.root.eval();
-		tree.print();
+		tree.run();
+		
+		ArrayList<String> program = new ArrayList<String>();
+		program = tree.print();
+		for(int i = 0; i < program.size(); i++){
+			System.out.println(program.get(i));
+		}
+		ScriptEngineManager mgr = new ScriptEngineManager();
+	    ScriptEngine engine = mgr.getEngineByName("JavaScript");
+	    System.out.println(engine.eval("Math.round(5.45/2)"));
 	}
 
 }

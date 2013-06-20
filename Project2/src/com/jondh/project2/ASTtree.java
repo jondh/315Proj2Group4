@@ -23,7 +23,9 @@ public class ASTtree {
 	Map<String, Double> var = new HashMap<String, Double>();
 	Map<Integer, ASTnode> nodes = new HashMap<Integer, ASTnode>();
 	Map<String, ASTnode> forNodes = new HashMap<String, ASTnode>();
+	ASTnode returnNode = null;
 	ASTnode root;
+	
 	
 	ScriptEngineManager mgr = new ScriptEngineManager();
     ScriptEngine engine = mgr.getEngineByName("JavaScript");
@@ -33,25 +35,41 @@ public class ASTtree {
     	root = r;
     }
     
-    public void print(){
+    /* 
+     * This function returns the complete program in order of the
+     * 	nodes of the tree.
+     */
+    public ArrayList<String> print(){
+    	// Initializing variables
+    	ArrayList<String> printReturn = new ArrayList<String>();
     	ArrayList<ASTnode> returnNode = new ArrayList<ASTnode>();
     	ASTtree.ASTnode printNode = new ASTnode();
     	printNode = root;
+    	if(printNode.leftnode==null) return null; // empty tree, exit
+    	// Go through tree until left-most branch is complete, if a rightnode
+    	//	is found, that branch is completely run before returning.
     	while(printNode.leftnode!=null || returnNode.size()!=0){
     		if(printNode.leftnode == null){
-    			printNode = returnNode.remove(0);
+    			printNode = returnNode.remove(returnNode.size()-1);
     		}
     		printNode = printNode.leftnode;
-    		System.out.println(printNode.programLine);
+    		//System.out.println(printNode.programLine);
+    		printReturn.add(printNode.programLine);
     		if(printNode.rightnode != null){
     			returnNode.add(printNode); //get node to go back to
     			printNode = printNode.rightnode;
-        		System.out.println(printNode.programLine);
+        		//System.out.println(printNode.programLine);
+    			printReturn.add(printNode.programLine);
     		}
     	}
+    	return printReturn;
     }
     
-	//This class defines the nodes of the tree; it contains
+	public void run(){
+		root.eval();
+	}
+    
+    //This class defines the nodes of the tree; it contains
 	//	subclass implementations of each node to be used in
 	//	the tree.
 	public class ASTnode {
@@ -63,12 +81,6 @@ public class ASTtree {
 		public boolean eval(){
 			if(leftnode == null) return false;
 			leftnode.eval();
-			return true;
-		}
-		
-		public boolean print(){
-			if(leftnode == null) return false;
-			leftnode.print();
 			return true;
 		}
 	}
@@ -101,22 +113,6 @@ public class ASTtree {
 //			rightnode.print();
 			return true;
 		}
-		
-		public boolean print(){
-			System.out.print(linenumber+" READ ");
-			for(int i = 0; i < variables.size(); i++){
-				System.out.print(variables.get(i));
-				if(i<variables.size()-1) System.out.print(", ");
-			}
-			System.out.print("\n");
-			if(leftnode == null) return false;
-			leftnode.print();
-			//while(leftnode.print()){
-//				if(rightnode == null) return false;
-//				rightnode.print();
-			//}
-			return true;
-		}
 	}
 	
 	public class ASTlet extends ASTnode{
@@ -147,17 +143,6 @@ public class ASTtree {
 //			rightnode.eval();
 			return true;
 		}
-		
-		public boolean print(){
-			System.out.println(linenumber+" LET "+equal+" = "+expr);
-			if(leftnode == null) return false;
-			leftnode.print();
-			//while(leftnode.print()){
-//				if(rightnode == null) return false;
-//				rightnode.print();
-		//	}
-			return true;
-		}
 	}
 
 	public class ASTdata extends ASTnode{
@@ -178,17 +163,6 @@ public class ASTtree {
 					programLine += ", ";
 				}
 			}
-		}
-		public boolean print(){
-			System.out.print(linenumber+" DATA ");
-			for(int i = 0; i < input.size(); i++){
-				System.out.print(input.get(i));
-				if(i < input.size()-1) System.out.print(", ");
-			}
-			System.out.print("\n");
-			if(leftnode == null) return false;
-			leftnode.print();
-			return true;
 		}
 	}
 
@@ -227,24 +201,6 @@ public class ASTtree {
 			leftnode.eval();
 			return true;
 		}
-		public boolean print(){
-			if(expr == ""){
-				System.out.print(linenumber+" PRINT ");
-				for(int i = 0; i < variables.size(); i++){
-					System.out.print(variables.get(i));
-					if(i < variables.size()-1) System.out.print(", ");
-				}
-				System.out.print("\n");
-			}
-			else{
-				System.out.println(linenumber+" PRINT \""+expr+"\"");
-			}
-			if(leftnode == null) return false;
-			leftnode.print();
-//			if(rightnode == null) return false;
-//			rightnode.print();
-			return true;
-		}
 	}
 
 	public class ASTgoto extends ASTnode{
@@ -265,15 +221,6 @@ public class ASTtree {
 				System.out.println("The node "+gotoNode+" does not exist. From GOTO");
 				return false;
 			}
-			return true;
-		}
-		
-		public boolean print(){
-			System.out.println(linenumber+" GOTO "+gotoNode);
-			if(leftnode == null) return false;
-			leftnode.print();
-//			if(rightnode == null) return false;
-//			rightnode.print();
 			return true;
 		}
 	}
@@ -316,15 +263,6 @@ public class ASTtree {
 //				if(rightnode == null) return false;
 //				rightnode.print();
 			}
-			return true;
-		}
-		
-		public boolean print(){
-			System.out.println(linenumber+" IF "+conditional+" THEN "+gotoNode);
-			if(leftnode == null) return false;
-			leftnode.print();
-//			if(rightnode == null) return false;
-//			rightnode.print();
 			return true;
 		}
 	}
@@ -383,15 +321,10 @@ public class ASTtree {
 				rightnode.eval();
 			}
 			else{
+				initial = true;
 				if(leftnode == null) return false;
 				leftnode.eval();
 			}
-			return true;
-		}
-		
-		public boolean print(){
-			if(rightnode == null) return false;
-			rightnode.eval();
 			return true;
 		}
 	}
@@ -417,14 +350,80 @@ public class ASTtree {
 			return true;
 		}
 	}
+	
+	public class ASTgosub extends ASTnode{
+		int gotoLine;
+		
+		ASTgosub(int go ,int lnNum){
+			gotoLine = go;
+			linenumber = lnNum;
+			nodes.put(lnNum, this);
+			programLine = linenumber + " GOSUB " + go;
+		}
+		
+		public boolean eval(){
+			returnNode = this;
+			if(nodes.containsKey(gotoLine)){
+				nodes.get(gotoLine).eval();
+			}
+			else{
+				return false;
+			}
+			return true;
+		}
+	}
+	
+	public class ASTreturn extends ASTnode{
+		
+		ASTreturn(int lnNum){
+			linenumber = lnNum;
+			nodes.put(lnNum, this);
+			programLine = linenumber + " RETURN";
+		}
+		
+		public boolean eval(){
+			returnNode.eval();
+			return true;
+		}
+		
+	}
+	
+	public class ASTend extends ASTnode{
+		ASTend(int lnNum){
+			linenumber = lnNum;
+			nodes.put(lnNum, this);
+			programLine = linenumber + " END";
+		}
+		
+		public boolean eval(){
+			return false;
+		}
+	}
+	
+	/*
+	 * 	This function takes in a string with variables and functions.
+	 * 	 It returns the same string with the variables replaced with 
+	 *   their current values and the function replaces with equivalent
+	 *   functions readable by JavaScript.
+	 */
 	// This takes an input expression with variables and
 	// outputs the expression with the varaiables converted to
 	// their values.
 	protected String putValuesIn(String expr){
 		String convert = "";
+		boolean function = false;
 		for(int i = 0; i < expr.length(); i++){
 			String varAt = "";
-			if(expr.charAt(i)>='A' && expr.charAt(i)<='Z'){
+			if(function && expr.charAt(i)=='('){
+				function = false;
+			}
+			if(i < expr.length()-1){
+				if(expr.charAt(i)>='A' && expr.charAt(i)<='Z' &&
+						expr.charAt(i+1)>='A' && expr.charAt(i+1)<='Z'){
+					function = true;
+				}
+			}
+			if(expr.charAt(i)>='A' && expr.charAt(i)<='Z' && !function){
 				varAt += expr.charAt(i);
 				if(i < expr.length()-1){
 					if(expr.charAt(i+1)>='0' && expr.charAt(i+1)<='9'){
@@ -443,7 +442,104 @@ public class ASTtree {
 				convert += expr.charAt(i);
 			}
 		}
-		return convert;
+		System.out.println(convert);
+		System.out.println(replaceFunctions(convert));
+		return replaceFunctions(convert);
+	}
+
+	private class FuncData{
+		String funcIn;
+		String funcOut;
+		
+		FuncData(String in, String out){
+			funcIn = in;
+			funcOut = out;
+		}
+	}
+	
+	protected String replaceFunctions(String inString){
+		ArrayList<FuncData> functionMap = new ArrayList<FuncData>();
+		functionMap = getReplaced();
+		inString = replaceRND(inString);
+		for(int i = 0; i < functionMap.size(); i++){
+			inString = inString.replace(functionMap.get(i).funcIn, functionMap.get(i).funcOut);
+		}
+		return inString;
+	}
+	
+	protected ArrayList<FuncData> getReplaced(){
+		ArrayList<FuncData> functionMap = new ArrayList<FuncData>();
+		FuncData data0 = new FuncData("SIN","Math.sin");
+		functionMap.add(data0);
+		FuncData data1 = new FuncData("COS","Math.cos");
+		functionMap.add(data1);
+		FuncData data2 = new FuncData("TAN","Math.tan");
+		functionMap.add(data2);
+		FuncData data3 = new FuncData("ATN","Math.atan");
+		functionMap.add(data3);
+		FuncData data4 = new FuncData("EXP(","Math.pow(Math.E,");
+		functionMap.add(data4);
+		FuncData data5 = new FuncData("ABS","Math.abs");
+		functionMap.add(data5);
+		FuncData data6 = new FuncData("LOG","Math.log");
+		functionMap.add(data6);
+		FuncData data7 = new FuncData("SQR","Math.sqrt");
+		functionMap.add(data7);
+		FuncData data8 = new FuncData("INT","Math.round");
+		functionMap.add(data8);
+		return functionMap;
+	}
+	
+	protected String getNextExpression(int pos, String inString){
+		String nextEpr = "";
+		if(inString.charAt(pos)=='('){
+			int pare = 1;
+			nextEpr += inString.charAt(pos);
+			pos++;
+			while(pare != 0){
+				nextEpr += inString.charAt(pos);
+				if(inString.charAt(pos) == '('){
+					pare++;
+				}
+				else if(inString.charAt(pos) == ')'){
+					pare--;
+				}
+				pos++;
+				System.out.println(nextEpr);
+			}
+		}
+		else{
+			while(isLetter(inString.charAt(pos)) ||
+					isNumber(inString.charAt(pos))){
+				nextEpr += inString.charAt(pos);
+				pos++;
+			}
+		}
+		return nextEpr;
+	}
+	
+	protected String replaceRND(String inString){
+		while(inString.indexOf("RND") >= 0){
+			int strAt = inString.indexOf("RND") + 3;
+			String replaceStr = "RND";
+			replaceStr += getNextExpression(strAt, inString);
+			inString = inString.replace(replaceStr, "Math.random()");
+		}
+		return inString;
+	}
+	
+	public boolean isNumber(char c){
+		if(c>='0' && c<='9'){
+			return true;
+		}
+		else return false;
+	}
+	public boolean isLetter(char c){
+		if((c>='A' && c<='Z') || (c>='a' && c<='z')){
+			return true;
+		}
+		else return false;
 	}
 }
+
 
