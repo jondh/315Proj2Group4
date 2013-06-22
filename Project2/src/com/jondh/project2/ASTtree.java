@@ -203,12 +203,16 @@ public class ASTtree {
 						strBuffer += evalSplit.get(i).replace("\"", "");
 					}
 					else{
-						strBuffer += evalExpr(evalSplit.get(1));
+						strBuffer += evalExpr(evalSplit.get(i));
 					}
 				}
 				if(items.get(j).lineType == ','){
 					for(int k = 0; k < strBuffer.length()%15; k++){
 						strBuffer += ' ';
+					}
+					if(strBuffer.length() >= 75){
+						System.out.println(linenumber + " "  +strBuffer);
+						strBuffer = "";
 					}
 				}
 				else if(items.get(j).lineType == ';'){
@@ -217,11 +221,17 @@ public class ASTtree {
 						strBuffer += ' ';
 						k++;
 					}
+					if(strBuffer.length() >= 75){
+						System.out.println(linenumber + " "  +strBuffer);
+						strBuffer = "";
+					}
+				}
+				else{
+					System.out.println(linenumber + " "  +strBuffer);
+					strBuffer = "";
 				}
 			}
 			
-			System.out.println(linenumber + " "  +strBuffer);
-			strBuffer = "";
 			if(leftnode == null) return false;
 			leftnode.eval();
 			return true;
@@ -541,8 +551,19 @@ public class ASTtree {
 		ArrayList<FuncData> functionMap = new ArrayList<FuncData>();
 		functionMap = getReplaced();
 		inString = replaceRND(inString);
+		inString = replaceExp(inString);
 		for(int i = 0; i < functionMap.size(); i++){
 			inString = inString.replace(functionMap.get(i).funcIn, functionMap.get(i).funcOut);
+		}
+		return inString;
+	}
+	
+	protected String replaceExp(String inString){
+		while(inString.indexOf('^') > 0){
+			int pos = inString.indexOf('^');
+			String prevEpr = getPrevExpression(pos, inString);
+			String nextEpr = getNextExpression(pos, inString);
+			inString = inString.replace(prevEpr+'^'+nextEpr, "Math.pow("+prevEpr+","+nextEpr+")");
 		}
 		return inString;
 	}
@@ -567,11 +588,23 @@ public class ASTtree {
 		functionMap.add(data7);
 		FuncData data8 = new FuncData("INT","Math.round");
 		functionMap.add(data8);
+		FuncData data9 = new FuncData("=","==");
+		functionMap.add(data9);
+		FuncData data10 = new FuncData("<>","!=");
+		functionMap.add(data10);
 		return functionMap;
 	}
 	
 	protected String getNextExpression(int pos, String inString){
 		String nextEpr = "";
+		if(inString.charAt(pos)=='^'){
+			pos++;
+			while(inString.charAt(pos)==' '){
+				nextEpr += inString.charAt(pos);
+				pos++;
+			}
+		}
+		
 		if(inString.charAt(pos)=='('){
 			int pare = 1;
 			nextEpr += inString.charAt(pos);
@@ -596,6 +629,49 @@ public class ASTtree {
 		}
 		return nextEpr;
 	}
+	// pos is position of carrot, assumes a vaild expression before
+	// the carrot
+	protected String getPrevExpression(int pos, String inString){
+		String prevEpr = "";
+		pos--;
+		while(inString.charAt(pos) == ' '){
+			prevEpr = inString.charAt(pos) + prevEpr;
+			pos--;
+		}
+		if(inString.charAt(pos)==')'){
+			int pare = 1;
+			prevEpr = inString.charAt(pos) + prevEpr;
+			pos--;
+			while(pare != 0){
+				prevEpr = inString.charAt(pos) + prevEpr;
+				if(inString.charAt(pos) == ')'){
+					pare++;
+				}
+				else if(inString.charAt(pos) == '('){
+					pare--;
+				}
+				pos--;
+			}
+		}
+		else{
+			boolean negative = false;
+			while(isLetter(inString.charAt(pos)) ||
+					isNumber(inString.charAt(pos))){
+				prevEpr = inString.charAt(pos) + prevEpr;
+				pos--;
+				// check for negative number
+				if(pos>0){ 
+					if(inString.charAt(pos-1)=='-'){
+						negative = true;
+					}
+				}
+			}
+			if(negative){
+				prevEpr = '-' + prevEpr;
+			}
+		}
+		return prevEpr;
+	}
 	
 	protected String replaceRND(String inString){
 		while(inString.indexOf("RND") >= 0){
@@ -609,7 +685,7 @@ public class ASTtree {
 	}
 	
 	public boolean isNumber(char c){
-		if(c>='0' && c<='9'){
+		if((c>='0' && c<='9') || c=='.'){
 			return true;
 		}
 		else return false;
