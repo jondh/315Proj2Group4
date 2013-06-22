@@ -25,6 +25,8 @@ public class ASTtree {
 	Map<String, ASTnode> forNodes = new HashMap<String, ASTnode>();
 	Map<String, String> listSize = new HashMap<String, String>();
 	Map<String, ArrayList<Double>> listVar = new HashMap<String, ArrayList<Double>>();
+	Map<String, String> functions = new HashMap<String, String>();
+	Map<String, String> functVar = new HashMap<String, String>();
 	String strBuffer = "";
 	ASTnode returnNode = null;
 	ASTnode root;
@@ -123,20 +125,23 @@ public class ASTtree {
 					size = size.replace("(", "");
 					size = size.replace(")", "");
 					String varList = variables.get(i).charAt(0)+"";
-					Double sizeList = evalExpr(size);
-					var.put(varList, sizeList);
+					int sizeList = (int) (evalExpr(size) - 0);
+					//var.put(varList, sizeList);
 					ArrayList<Double> list = new ArrayList<Double>();
-					// put data into list for size of list
-					for(int j = 0; j < sizeList; j++){
-						if(data.size()==0){
-							System.out.println("Out of data, done.");
-							return false;
-						}
-						list.add(data.remove(0));
+					if(listVar.containsKey(varList)){
+						list = listVar.get(varList);
 					}
+					if(list.size() < sizeList+1){
+						for(int j = list.size(); j < sizeList+1; j++){
+							list.add(0.0);
+						}
+					}
+					list.set((int) (sizeList), data.remove(0));
 					listVar.put(varList, list);
 				}
-				var.put(variables.get(i),data.remove(0));
+				else{
+					var.put(variables.get(i),data.remove(0));
+				}
 			}
 			if(leftnode == null) return false;
 			leftnode.eval();
@@ -163,7 +168,20 @@ public class ASTtree {
 		}
 		
 		public boolean eval(){
-			var.put(equal, evalExpr(expr));
+			if(equal.indexOf('(') == 1){
+				ArrayList<Double> varArray = new ArrayList<Double>();
+				String varList = equal.charAt(0)+"";
+				String size = equal.substring(1);
+				varArray = listVar.get(varList);
+				size = size.replace("(", "");
+				size = size.replace(")", "");
+				int index = evalExpr(size).intValue();
+				varArray.set(index, evalExpr(expr));
+				listVar.put(varList, varArray);
+			}
+			else{
+				var.put(equal, evalExpr(expr));
+			}
 			if(leftnode != null){
 				leftnode.eval();
 			}
@@ -225,7 +243,7 @@ public class ASTtree {
 						strBuffer += evalSplit.get(i).replace("\"", "");
 					}
 					else{
-						strBuffer += evalExpr(evalSplit.get(i));
+						strBuffer += formatOut(evalExpr(evalSplit.get(i)));
 					}
 				}
 				if(items.get(j).lineType == ','){
@@ -233,23 +251,23 @@ public class ASTtree {
 						strBuffer += ' ';
 					}
 					if(strBuffer.length() >= 75){
-						System.out.println(linenumber + " "  +strBuffer);
+						System.out.println(strBuffer);
 						strBuffer = "";
 					}
 				}
 				else if(items.get(j).lineType == ';'){
 					int k = 0;
-					while(k < 2 || strBuffer.length()%3 != 0){
+					while(k < 3 || strBuffer.length()%3 != 0){
 						strBuffer += ' ';
 						k++;
 					}
-					if(strBuffer.length() >= 75){
-						System.out.println(linenumber + " "  +strBuffer);
+					if(strBuffer.length() >= 70){
+						System.out.println(strBuffer);
 						strBuffer = "";
 					}
 				}
 				else{
-					System.out.println(linenumber + " "  +strBuffer);
+					System.out.println(strBuffer);
 					strBuffer = "";
 				}
 			}
@@ -257,6 +275,18 @@ public class ASTtree {
 			if(leftnode == null) return false;
 			leftnode.eval();
 			return true;
+		}
+		
+		private String formatOut(Double in){
+			String num = String.format("%.7G", in);
+			num = num.replace("+", "");
+			// This delets all the trailing zeros after decimal
+			// reference -> user mdm on stackoverflow
+			//	url: http://stackoverflow.com/questions/14984664/remove-trailing-zero-in-java
+			if(num.indexOf('.') >= 0){
+				num = num.replaceAll("\\.?0+$", "");
+			}
+			return num;
 		}
 	}
 
@@ -455,6 +485,7 @@ public class ASTtree {
 				nodes.get(gotoLine).eval();
 			}
 			else{
+				System.out.println("Error in GOSUB - Line doesn't exist");
 				return false;
 			}
 			return true;
@@ -479,6 +510,35 @@ public class ASTtree {
 		}
 		
 	}
+	/*
+	 *  This class defines a function. The constructor takes the
+	 *  	letter the function is defined by (ie X or N for FNX or
+	 *  	FNN), the variable of the function (ie X or Y for FNR(X)
+	 *  	or FNR(Y)), the actual user defined function, and its own
+	 *  	line number.
+	 */
+	public class ASTdef extends ASTnode{
+		String funct;
+		String funVar;
+		String funLet;
+		
+		ASTdef(String l, String v, String fun, int lnNum){
+			funLet = l;
+			funVar = v;
+			funct = fun;
+			linenumber = lnNum;
+			nodes.put(lnNum, this);
+			programLine = linenumber + " DEF FN" + funLet + "(" +
+						funVar + ")" + " = " + funct;
+		}
+		
+		public boolean eval(){
+			functVar.put(funLet, funVar);
+			functions.put(funLet, funct);
+			leftnode.eval();
+			return true;
+		}
+	}
 	
 	/*
 	 *  The class ends execution. Its constructor expects only its
@@ -492,6 +552,7 @@ public class ASTtree {
 		}
 		
 		public boolean eval(){
+			System.out.println(strBuffer);
 			return false;
 		}
 	}
@@ -520,6 +581,7 @@ public class ASTtree {
 			String varAt = "";
 			String listExpr = "";
 			boolean listVariable = false;
+			boolean scientific = false;
 			Double listIndex = 0.0;
 			if(function && expr.charAt(i)=='('){
 				function = false;
@@ -529,8 +591,12 @@ public class ASTtree {
 						expr.charAt(i+1)>='A' && expr.charAt(i+1)<='Z'){
 					function = true;
 				}
+				else if(expr.charAt(i)=='E' && (isNumber(expr.charAt(i+1)) ||
+							expr.charAt(i)=='-')){
+					scientific = true;
+				}
 			}
-			if(expr.charAt(i)>='A' && expr.charAt(i)<='Z' && !function){
+			if(expr.charAt(i)>='A' && expr.charAt(i)<='Z' && !function && !scientific){
 				varAt += expr.charAt(i);
 				if(i < expr.length()-1){
 					if(expr.charAt(i+1)>='0' && expr.charAt(i+1)<='9'){
@@ -591,8 +657,35 @@ public class ASTtree {
 		functionMap = getReplaced();
 		inString = replaceRND(inString);
 		inString = replaceExp(inString);
+		inString = replaceUser(inString);
 		for(int i = 0; i < functionMap.size(); i++){
 			inString = inString.replace(functionMap.get(i).funcIn, functionMap.get(i).funcOut);
+		}
+		return inString;
+	}
+	
+	protected String replaceUser(String inString){
+		while(inString.indexOf("FN") >= 0){
+			int pos = inString.indexOf("FN");
+			String funLet = inString.charAt(pos+2) + "";
+			// Get the input for the function
+			String funInput = getNextExpression(pos+3, inString);
+			if(functVar.containsKey(funLet)){
+				String funVar = functVar.get(funLet);
+				if(functions.containsKey(funLet)){
+					String funct = functions.get(funLet);
+					funct = funct.replace(funVar, funInput);
+					inString = inString.replace("FN"+funLet+funInput, funct);
+					System.out.println(inString);
+				}
+				else{
+					System.out.println("Error in replaceUser -programming");
+				}
+			}
+			else{
+				System.out.println("Error in user function, FN" + 
+						funLet+" is not defined");
+			}
 		}
 		return inString;
 	}
@@ -660,6 +753,9 @@ public class ASTtree {
 			}
 		}
 		else{
+			while(inString.charAt(pos) == ' '){
+				pos++;
+			}
 			while(isLetter(inString.charAt(pos)) ||
 					isNumber(inString.charAt(pos))){
 				nextEpr += inString.charAt(pos);
