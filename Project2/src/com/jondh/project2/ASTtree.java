@@ -1,5 +1,6 @@
 package com.jondh.project2;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +23,8 @@ public class ASTtree {
 	Map<String, Double> var = new HashMap<String, Double>();
 	Map<Integer, ASTnode> nodes = new HashMap<Integer, ASTnode>();
 	Map<String, ASTnode> forNodes = new HashMap<String, ASTnode>();
+	Map<String, String> listSize = new HashMap<String, String>();
+	Map<String, ArrayList<Double>> listVar = new HashMap<String, ArrayList<Double>>();
 	String strBuffer = "";
 	ASTnode returnNode = null;
 	ASTnode root;
@@ -111,13 +114,32 @@ public class ASTtree {
 		}
 		public boolean eval(){
 			for(int i = 0; i < variables.size(); i++){
-				if(data.size()==0) return false;
+				if(data.size()==0){
+					System.out.println("Out of data, done.");
+					return false;
+				}
+				if(variables.get(i).indexOf('(') == 1){
+					String size = variables.get(i).substring(1);
+					size = size.replace("(", "");
+					size = size.replace(")", "");
+					String varList = variables.get(i).charAt(0)+"";
+					Double sizeList = evalExpr(size);
+					var.put(varList, sizeList);
+					ArrayList<Double> list = new ArrayList<Double>();
+					// put data into list for size of list
+					for(int j = 0; j < sizeList; j++){
+						if(data.size()==0){
+							System.out.println("Out of data, done.");
+							return false;
+						}
+						list.add(data.remove(0));
+					}
+					listVar.put(varList, list);
+				}
 				var.put(variables.get(i),data.remove(0));
 			}
 			if(leftnode == null) return false;
 			leftnode.eval();
-//			if(rightnode == null) return false;
-//			rightnode.print();
 			return true;
 		}
 	}
@@ -496,6 +518,9 @@ public class ASTtree {
 		boolean function = false;
 		for(int i = 0; i < expr.length(); i++){
 			String varAt = "";
+			String listExpr = "";
+			boolean listVariable = false;
+			Double listIndex = 0.0;
 			if(function && expr.charAt(i)=='('){
 				function = false;
 			}
@@ -512,8 +537,22 @@ public class ASTtree {
 						varAt += expr.charAt(i+1);
 						i++;
 					}
+					else if(expr.charAt(i+1) == '('){
+						i+=2;
+						while(expr.charAt(i) != ')'){
+							listExpr += expr.charAt(i);
+							i++;
+						}
+						listVariable = true;
+						listIndex = evalExpr(listExpr);
+					}
 				}
-				if(var.containsKey(varAt)){
+				if(listVariable){
+					if(listVar.containsKey(varAt)){
+						convert += " "+listVar.get(varAt).get(listIndex.intValue());
+					}
+				}
+				else if(var.containsKey(varAt)){
 					convert += " "+var.get(varAt);
 				}
 				else{
@@ -700,6 +739,7 @@ public class ASTtree {
 	protected ArrayList<String> splitExpression(String expr){
 		ArrayList<String> parts = new ArrayList<String>();
 		for(int i = 0; i < expr.length(); i++){
+			while(expr.charAt(i) == ' ') i++;
 			if(expr.charAt(i) == '"'){
 				String quote = "" + expr.charAt(i);
 				i++;
@@ -713,7 +753,7 @@ public class ASTtree {
 			}
 			else{
 				String ex = "";
-				while(expr.charAt(i)!='"' && i<expr.length()-1){
+				while(expr.charAt(i)!='"' && i<expr.length()-1 && expr.charAt(i)!=' '){
 					ex += expr.charAt(i);
 					i++;
 				}

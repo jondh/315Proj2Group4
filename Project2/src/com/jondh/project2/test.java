@@ -29,6 +29,7 @@ public class test {
 		vars.add("A4");
 		vars30.add("B1");
 		vars30.add("B2");
+		vars30.add("X(3)");
 		data70.add(1.0);
 		data70.add(2.0);
 		data70.add(4.0);
@@ -41,10 +42,12 @@ public class test {
 		data85.add(-7.0);
 		ASTtree.printStruct ps0 = tree.new printStruct("\"X1 = \" X1",',');
 		ASTtree.printStruct ps1 = tree.new printStruct("\"X2 = \" X2",',');
+		ASTtree.printStruct ps01 = tree.new printStruct("\"X(0) = \" X(0) \" X(1) = \" X(1) \" X(2) = \" X(2) " ,' ');
 		ASTtree.printStruct ps2 = tree.new printStruct("I",',');
 		ASTtree.printStruct ps3 = tree.new printStruct("J",',');
 		pr55.add(ps0);
 		pr55.add(ps1);
+		pr55.add(ps01);
 		pr95.add(ps2);
 		pr97.add(ps3);
 		
