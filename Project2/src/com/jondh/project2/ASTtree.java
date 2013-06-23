@@ -1,6 +1,5 @@
 package com.jondh.project2;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,23 +18,19 @@ import javax.script.ScriptException;
 //This is the main class that will contain the values for
 //	the data and what the variables are equal to;
 public class ASTtree {
-	ArrayList<Double> data = new ArrayList<Double>();
-	Map<String, Double> var = new HashMap<String, Double>();
 	Map<Integer, ASTnode> nodes = new HashMap<Integer, ASTnode>();
 	Map<String, ASTnode> forNodes = new HashMap<String, ASTnode>();
-	Map<String, String> listSize = new HashMap<String, String>();
-	Map<String, ArrayList<Double>> listVar = new HashMap<String, ArrayList<Double>>();
-	Map<String, String> functions = new HashMap<String, String>();
-	Map<String, String> functVar = new HashMap<String, String>();
 	String strBuffer = "";
 	ASTnode returnNode = null;
 	ASTnode root;
 	
+	BasicData data1;
 	
 	ScriptEngineManager mgr = new ScriptEngineManager();
     ScriptEngine engine = mgr.getEngineByName("JavaScript");
 	
     public ASTtree(){
+    	data1 = new BasicData();
     	ASTtree.ASTnode r = new ASTnode();
     	root = r;
     }
@@ -115,35 +110,24 @@ public class ASTtree {
 			}
 		}
 		public boolean eval(){
+			boolean dataInserted = true;
 			for(int i = 0; i < variables.size(); i++){
-				if(data.size()==0){
-					System.out.println("Out of data, done.");
-					return false;
-				}
 				if(variables.get(i).indexOf('(') == 1){
 					String size = variables.get(i).substring(1);
 					size = size.replace("(", "");
 					size = size.replace(")", "");
 					String varList = variables.get(i).charAt(0)+"";
 					int sizeList = (int) (evalExpr(size) - 0);
-					//var.put(varList, sizeList);
-					ArrayList<Double> list = new ArrayList<Double>();
-					if(listVar.containsKey(varList)){
-						list = listVar.get(varList);
-					}
-					if(list.size() < sizeList+1){
-						for(int j = list.size(); j < sizeList+1; j++){
-							list.add(0.0);
-						}
-					}
-					list.set((int) (sizeList), data.remove(0));
-					listVar.put(varList, list);
+					dataInserted = data1.insertList(varList, sizeList, data1.getData()); 
 				}
 				else{
-					var.put(variables.get(i),data.remove(0));
+					dataInserted = data1.updateVar(variables.get(i), data1.getData()); 
 				}
 			}
-			if(leftnode == null) return false;
+			if(leftnode == null || !dataInserted){
+					//TODO return string buffer
+				return false;
+			}
 			leftnode.eval();
 			return true;
 		}
@@ -169,18 +153,15 @@ public class ASTtree {
 		
 		public boolean eval(){
 			if(equal.indexOf('(') == 1){
-				ArrayList<Double> varArray = new ArrayList<Double>();
 				String varList = equal.charAt(0)+"";
 				String size = equal.substring(1);
-				varArray = listVar.get(varList);
 				size = size.replace("(", "");
 				size = size.replace(")", "");
 				int index = evalExpr(size).intValue();
-				varArray.set(index, evalExpr(expr));
-				listVar.put(varList, varArray);
+				data1.insertList(varList, index, evalExpr(expr));
 			}
 			else{
-				var.put(equal, evalExpr(expr));
+				data1.updateVar(equal, evalExpr(expr));
 			}
 			if(leftnode != null){
 				leftnode.eval();
@@ -202,8 +183,8 @@ public class ASTtree {
 			input = dataIn;
 			nodes.put(lnNum, this);
 			programLine += linenumber+" DATA ";
+			data1.insertDataArray(dataIn);
 			for(int i = 0; i < dataIn.size(); i++){
-				data.add(dataIn.get(i));
 				programLine += dataIn.get(i);
 				if(i < dataIn.size()-1){
 					programLine += ", ";
@@ -308,7 +289,7 @@ public class ASTtree {
 			if(nodes.containsKey(gotoNode)){
 				nodes.get(gotoNode).eval();
 			}
-			else{
+			else{ //TODO goto error
 				System.out.println("The node "+gotoNode+" does not exist. From GOTO");
 				return false;
 			}
@@ -338,7 +319,7 @@ public class ASTtree {
 			boolean cond = false;
 			// Runs the conditional in javascript, throws scripting exception
 		    try {
-				if((Boolean) engine.eval(putValuesIn(conditional))){
+				if((Boolean) engine.eval(putValuesIn(conditional))){ //TODO
 					cond = true;
 				}
 			} catch (ScriptException e) {
@@ -357,8 +338,6 @@ public class ASTtree {
 			else{
 				if(leftnode == null) return false;
 				leftnode.eval();
-//				if(rightnode == null) return false;
-//				rightnode.print();
 			}
 			return true;
 		}
@@ -389,13 +368,7 @@ public class ASTtree {
 		ASTfor(String nVar, String nIni, String toCond, Double step, int lnNum){
 			forVar = nVar;
 			initialValue = nIni;
-			until = 0.0;
-			try {
-				until = (Double) engine.eval(putValuesIn(toCond));
-			} catch (ScriptException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			until = evalExpr(putValuesIn(toCond));
 			stepBy = step;
 			linenumber = lnNum;
 			nodes.put(lnNum, this);
@@ -406,24 +379,19 @@ public class ASTtree {
 		
 		public boolean eval(){
 			if(initial == true){ //Initial input var to expression
-				Double evalExpr = 0.0;
-				try {
-					evalExpr = (Double) engine.eval(putValuesIn(initialValue))-stepBy;
-				} catch (ScriptException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				var.put(forVar, evalExpr);
+				Double evalExpr = evalExpr(putValuesIn(initialValue))-stepBy;
+				data1.updateVar(forVar, evalExpr);
 				initial = false;
 			}
-			Double curVal = var.get(forVar)+stepBy;
+			Double curVal = data1.getVar(forVar)+stepBy;
+			// TODO data1 check for error
 			if(stepBy>0 && curVal<=until){
-				var.put(forVar, curVal);
+				data1.updateVar(forVar, curVal);
 				if(rightnode == null) return false;
 				rightnode.eval();
 			}
 			else if(stepBy<0 && curVal>=until){
-				var.put(forVar, curVal);
+				data1.updateVar(forVar, curVal);
 				if(rightnode == null) return false;
 				rightnode.eval();
 			}
@@ -485,6 +453,7 @@ public class ASTtree {
 				nodes.get(gotoLine).eval();
 			}
 			else{
+				//TODO GOSUB error
 				System.out.println("Error in GOSUB - Line doesn't exist");
 				return false;
 			}
@@ -533,8 +502,8 @@ public class ASTtree {
 		}
 		
 		public boolean eval(){
-			functVar.put(funLet, funVar);
-			functions.put(funLet, funct);
+			data1.insertFormula(funLet, funVar, funct);
+			if(leftnode == null) return false;
 			leftnode.eval();
 			return true;
 		}
@@ -582,7 +551,7 @@ public class ASTtree {
 			String listExpr = "";
 			boolean listVariable = false;
 			boolean scientific = false;
-			Double listIndex = 0.0;
+			int listIndex = 0;
 			if(function && expr.charAt(i)=='('){
 				function = false;
 			}
@@ -610,20 +579,17 @@ public class ASTtree {
 							i++;
 						}
 						listVariable = true;
-						listIndex = evalExpr(listExpr);
+						listIndex = evalExpr(listExpr).intValue();
 					}
 				}
 				if(listVariable){
-					if(listVar.containsKey(varAt)){
-						convert += " "+listVar.get(varAt).get(listIndex.intValue());
-					}
-				}
-				else if(var.containsKey(varAt)){
-					convert += " "+var.get(varAt);
+					convert += data1.getList(varAt, listIndex);
 				}
 				else{
-					convert += "NaN";
+					convert += data1.getVar(varAt);
+					// TODO illegal formula check
 				}
+				
 			}
 			else{
 				convert += expr.charAt(i);
@@ -632,15 +598,7 @@ public class ASTtree {
 		return replaceFunctions(convert);
 	}
 
-	public class printStruct{
-		String statement;
-		char lineType;
-		
-		printStruct(String pr, char l){
-			statement = pr;
-			lineType = l;
-		}
-	}
+	
 	
 	private class FuncData{
 		String funcIn;
@@ -670,22 +628,9 @@ public class ASTtree {
 			String funLet = inString.charAt(pos+2) + "";
 			// Get the input for the function
 			String funInput = getNextExpression(pos+3, inString);
-			if(functVar.containsKey(funLet)){
-				String funVar = functVar.get(funLet);
-				if(functions.containsKey(funLet)){
-					String funct = functions.get(funLet);
-					funct = funct.replace(funVar, funInput);
-					inString = inString.replace("FN"+funLet+funInput, funct);
-					System.out.println(inString);
-				}
-				else{
-					System.out.println("Error in replaceUser -programming");
-				}
-			}
-			else{
-				System.out.println("Error in user function, FN" + 
-						funLet+" is not defined");
-			}
+			String formula_ = data1.getFormula(funLet, funInput);
+			inString = inString.replace("FN"+funLet+funInput, formula_);
+			// TODO undefined function check
 		}
 		return inString;
 	}
@@ -858,6 +803,16 @@ public class ASTtree {
 			}
 		}
 		return parts;
+	}
+	
+	public class printStruct{
+		String statement;
+		char lineType;
+		
+		printStruct(String pr, char l){
+			statement = pr;
+			lineType = l;
+		}
 	}
 }
 

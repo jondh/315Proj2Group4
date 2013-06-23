@@ -16,49 +16,49 @@ public class test {
 		ASTtree tree = new ASTtree();
 		
 		// Test of lists and user functions
-//		ArrayList<String> rd20 = new ArrayList<String>();
-//		rd20.add("P(I)");
-//		ArrayList<ASTtree.printStruct> pr60 = new ArrayList<ASTtree.printStruct>();
-//		ASTtree.printStruct ps01 = tree.new printStruct("\"P(0) = \" P(0) \" P(1) = \" P(1) \" P(2) = \" P(2) \" P(3) = \" P(3)" ,' ');
-//		pr60.add(ps01);
-//		ArrayList<Double> d1000 = new ArrayList<Double>();
-//		d1000.add(10.0);
-//		d1000.add(20.0);
-//		d1000.add(30.0);
-//		d1000.add(1303000.0);
-//		
-//		ASTtree.ASTfor for10 = tree.new ASTfor("I","0","3",1.0,10);
-//		ASTtree.ASTread read20 = tree.new ASTread(rd20,20);
-//		ASTtree.ASTnext next30 = tree.new ASTnext("I",30);
-//		ASTtree.ASTlet let40 = tree.new ASTlet("P(1)", "-23.435E3", 40);
-//		ASTtree.ASTdef def50 = tree.new ASTdef("X","X","(ABS(X*9)*10)",50);
-//		ASTtree.ASTlet let55 = tree.new ASTlet("P(2)","FNX(-3)",55);
-//		ASTtree.ASTprint print60 = tree.new ASTprint(pr60,60);
-//		ASTtree.ASTdata data1000 = tree.new ASTdata(d1000,1000);
-//		
-//		tree.root.leftnode = for10;
-//		for10.rightnode = read20;
-//		read20.leftnode = next30;
-//		for10.leftnode = let40;
-//		let40.leftnode = def50;
-//		def50.leftnode = let55;
-//		let55.leftnode = print60;
-//		print60.leftnode = data1000;
+		ArrayList<String> rd20 = new ArrayList<String>();
+		rd20.add("P(I)");
+		ArrayList<ASTtree.printStruct> pr60 = new ArrayList<ASTtree.printStruct>();
+		ASTtree.printStruct ps01 = tree.new printStruct("\"P(0) = \" P(0) \" P(1) = \" P(1) \" P(2) = \" P(2) \" P(3) = \" P(3)" ,' ');
+		pr60.add(ps01);
+		ArrayList<Double> d1000 = new ArrayList<Double>();
+		d1000.add(10.0);
+		d1000.add(20.0);
+		d1000.add(30.0);
+		d1000.add(0.00001234567);
 		
-		// for 1 -> 100 print i*i*i
-		ASTtree.printStruct ps0 = tree.new printStruct("I*I*I",';');
-		ArrayList<ASTtree.printStruct> aps0 = new ArrayList<ASTtree.printStruct>();
-		aps0.add(ps0);
-		
-		ASTtree.ASTfor for10 = tree.new ASTfor("I","1","100",1.0,10);
-		ASTtree.ASTprint pr20 = tree.new ASTprint(aps0,20);
-		ASTtree.ASTnext next30 = tree.new ASTnext("I",20);
-		ASTtree.ASTend end40 = tree.new ASTend(40);
+		ASTtree.ASTfor for10 = tree.new ASTfor("I","0","3",1.0,10);
+		ASTtree.ASTread read20 = tree.new ASTread(rd20,20);
+		ASTtree.ASTnext next30 = tree.new ASTnext("I",30);
+		ASTtree.ASTlet let40 = tree.new ASTlet("P(1)", "-23.435E3", 40);
+		ASTtree.ASTdef def50 = tree.new ASTdef("X","X","(ABS(X*9)*10)",50);
+		ASTtree.ASTlet let55 = tree.new ASTlet("P(2)","FNX(-3)",55);
+		ASTtree.ASTprint print60 = tree.new ASTprint(pr60,60);
+		ASTtree.ASTdata data1000 = tree.new ASTdata(d1000,1000);
 		
 		tree.root.leftnode = for10;
-		for10.rightnode = pr20;
-		pr20.leftnode = next30;
-		for10.leftnode = end40;
+		for10.rightnode = read20;
+		read20.leftnode = next30;
+		for10.leftnode = let40;
+		let40.leftnode = def50;
+		def50.leftnode = let55;
+		let55.leftnode = print60;
+		print60.leftnode = data1000;
+		
+		// for 1 -> 100 print i*i*i
+//		ASTtree.printStruct ps0 = tree.new printStruct("I*I*I",';');
+//		ArrayList<ASTtree.printStruct> aps0 = new ArrayList<ASTtree.printStruct>();
+//		aps0.add(ps0);
+//		
+//		ASTtree.ASTfor for10 = tree.new ASTfor("I","1","100",1.0,10);
+//		ASTtree.ASTprint pr20 = tree.new ASTprint(aps0,20);
+//		ASTtree.ASTnext next30 = tree.new ASTnext("I",20);
+//		ASTtree.ASTend end40 = tree.new ASTend(40);
+//		
+//		tree.root.leftnode = for10;
+//		for10.rightnode = pr20;
+//		pr20.leftnode = next30;
+//		for10.leftnode = end40;
 		
 		// The test program from http://www.cs.bris.ac.uk/~dave/basic.pdf
 //		ArrayList<String> vars = new ArrayList<String>();
