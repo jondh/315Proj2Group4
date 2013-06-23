@@ -17,6 +17,7 @@ import java.util.Map;
 public class ASTtree {
 	Map<Integer, ASTnode> nodes = new HashMap<Integer, ASTnode>();
 	Map<String, ASTnode> forNodes = new HashMap<String, ASTnode>();
+	ArrayList<String> output = new ArrayList<String>();
 	String strBuffer = "";
 	ASTnode returnNode = null;
 	ASTnode root;
@@ -61,8 +62,9 @@ public class ASTtree {
     	return printReturn;
     }
     
-	public void run(){
+	public ArrayList<String> run(){
 		root.eval();
+		return output;
 	}
     
     //This class defines the nodes of the tree; it contains
@@ -74,10 +76,30 @@ public class ASTtree {
 		int linenumber = 0;
 		String programLine = "";
 		
-		public boolean eval(){
-			if(leftnode == null) return false;
-			leftnode.eval();
-			return true;
+		public void eval(){
+			if(leftnode == null || errorCheck()){
+				output.add(strBuffer);
+			}
+			else{
+				leftnode.eval();
+			}
+		}
+		
+		protected void evalLeftNode(){
+			if(leftnode == null || errorCheck()){
+				output.add(strBuffer);
+			}
+			else{
+				leftnode.eval();
+			}
+		}
+		protected void evalRightNode(){
+			if(rightnode == null || errorCheck()){
+				output.add(strBuffer);
+			}
+			else{
+				rightnode.eval();
+			}
 		}
 	}
 	
@@ -105,7 +127,7 @@ public class ASTtree {
 				}
 			}
 		}
-		public boolean eval(){
+		public void eval(){
 			boolean dataInserted = true;
 			for(int i = 0; i < variables.size(); i++){
 				if(variables.get(i).indexOf('(') == 1){
@@ -120,12 +142,12 @@ public class ASTtree {
 					dataInserted = data1.updateVar(variables.get(i), data1.getData()); 
 				}
 			}
-			if(leftnode == null || !dataInserted){
-					//TODO return string buffer
-				return false;
+			if(dataInserted){
+				evalLeftNode();
 			}
-			leftnode.eval();
-			return true;
+			else{
+				output.add(strBuffer);
+			}
 		}
 	}
 	
@@ -147,7 +169,7 @@ public class ASTtree {
 			programLine = linenumber+" LET "+equal+" = "+expr;
 		}
 		
-		public boolean eval(){
+		public void eval(){
 			if(equal.indexOf('(') == 1){
 				String varList = equal.charAt(0)+"";
 				String size = equal.substring(1);
@@ -159,10 +181,7 @@ public class ASTtree {
 			else{
 				data1.updateVar(equal, eval1.evalExpr(expr));
 			}
-			if(leftnode != null){
-				leftnode.eval();
-			}
-			return true;
+			evalLeftNode();
 		}
 	}
 
@@ -210,7 +229,7 @@ public class ASTtree {
 			}
 		}
 		
-		public boolean eval(){
+		public void eval(){
 			ArrayList<String> evalSplit = new ArrayList<String>();
 			for(int j = 0; j < items.size(); j++){
 				evalSplit = eval1.splitExpression(items.get(j).statement);
@@ -228,7 +247,7 @@ public class ASTtree {
 						strBuffer += ' ';
 					}
 					if(strBuffer.length() >= 75){
-						System.out.println(strBuffer);
+						output.add(strBuffer);
 						strBuffer = "";
 					}
 				}
@@ -239,19 +258,17 @@ public class ASTtree {
 						k++;
 					}
 					if(strBuffer.length() >= 70){
-						System.out.println(strBuffer);
+						output.add(strBuffer);
 						strBuffer = "";
 					}
 				}
 				else{
-					System.out.println(strBuffer);
+					output.add(strBuffer);
 					strBuffer = "";
 				}
 			}
 			
-			if(leftnode == null) return false;
-			leftnode.eval();
-			return true;
+			evalLeftNode();
 		}
 		
 		private String formatOut(Double in){
@@ -281,15 +298,14 @@ public class ASTtree {
 			programLine = linenumber + " GOTO " + go;
 		}
 		
-		public boolean eval(){
+		public void eval(){
 			if(nodes.containsKey(gotoNode)){
 				nodes.get(gotoNode).eval();
 			}
-			else{ //TODO goto error
-				System.out.println("The node "+gotoNode+" does not exist. From GOTO");
-				return false;
+			else{ 
+				output.add(strBuffer);
+				output.add("UNDEFINED NUMBER");
 			}
-			return true;
 		}
 	}
 
@@ -311,7 +327,7 @@ public class ASTtree {
 			programLine += linenumber+" IF "+conditional+" THEN "+gotoNode;
 		}
 		
-		public boolean eval(){
+		public void eval(){
 			boolean cond = eval1.evalExprB(conditional);
 			
 			if(cond){
@@ -319,16 +335,13 @@ public class ASTtree {
 					nodes.get(gotoNode).eval();
 				}
 				else{
-					// TODO goto error
-					System.out.println("The node "+gotoNode+" does not exist. From IF THEN");
-					return false;
+					output.add(strBuffer);
+					output.add("UNDEFINED NUMBER");
 				}
 			}
 			else{
-				if(leftnode == null) return false;
-				leftnode.eval();
+				evalLeftNode();
 			}
-			return true;
 		}
 	}
 	
@@ -366,7 +379,7 @@ public class ASTtree {
 					" TO " + until + " STEP " + step;
 		}
 		
-		public boolean eval(){
+		public void eval(){
 			if(initial == true){ //Initial input var to expression
 				Double evalExpr = eval1.evalExpr(initialValue)-stepBy;
 				data1.updateVar(forVar, evalExpr);
@@ -376,20 +389,16 @@ public class ASTtree {
 			// TODO data1 check for error
 			if(stepBy>0 && curVal<=until){
 				data1.updateVar(forVar, curVal);
-				if(rightnode == null) return false;
-				rightnode.eval();
+				evalRightNode();
 			}
 			else if(stepBy<0 && curVal>=until){
 				data1.updateVar(forVar, curVal);
-				if(rightnode == null) return false;
-				rightnode.eval();
+				evalRightNode();
 			}
 			else{
 				initial = true;
-				if(leftnode == null) return false;
-				leftnode.eval();
+				evalLeftNode();
 			}
-			return true;
 		}
 	}
 	
@@ -409,15 +418,14 @@ public class ASTtree {
 			programLine = linenumber + " NEXT " + forVar;
 		}
 		
-		public boolean eval(){
+		public void eval(){
 			if(forNodes.containsKey(forVar)){
 				forNodes.get(forVar).eval();
 			}
 			else{
-				System.out.println(forVar + " not contained in FOR node");
-				return false;
+				output.add(strBuffer);
+				output.add("NOT MATCH WITH FOR");
 			}
-			return true;
 		}
 	}
 	
@@ -436,17 +444,15 @@ public class ASTtree {
 			programLine = linenumber + " GOSUB " + go;
 		}
 		
-		public boolean eval(){
+		public void eval(){
 			returnNode = this;
 			if(nodes.containsKey(gotoLine)){
 				nodes.get(gotoLine).eval();
 			}
 			else{
-				//TODO GOSUB error
-				System.out.println("Error in GOSUB - Line doesn't exist");
-				return false;
+				output.add(strBuffer);
+				output.add("UNDEFINED NUMBER");
 			}
-			return true;
 		}
 	}
 	
@@ -462,9 +468,14 @@ public class ASTtree {
 			programLine = linenumber + " RETURN";
 		}
 		
-		public boolean eval(){
-			returnNode.eval();
-			return true;
+		public void eval(){
+			if(returnNode == null){
+				output.add(strBuffer);
+				output.add("ILLEGAL RETURN");
+			}
+			else{
+				returnNode.eval();
+			}
 		}
 		
 	}
@@ -490,11 +501,9 @@ public class ASTtree {
 						funVar + ")" + " = " + funct;
 		}
 		
-		public boolean eval(){
+		public void eval(){
 			data1.insertFormula(funLet, funVar, funct);
-			if(leftnode == null) return false;
-			leftnode.eval();
-			return true;
+			evalLeftNode();
 		}
 	}
 	
@@ -509,9 +518,8 @@ public class ASTtree {
 			programLine = linenumber + " END";
 		}
 		
-		public boolean eval(){
-			System.out.println(strBuffer);
-			return false;
+		public void eval(){
+			output.add(strBuffer);
 		}
 	}
 	
@@ -522,6 +530,21 @@ public class ASTtree {
 		printStruct(String pr, char l){
 			statement = pr;
 			lineType = l;
+		}
+	}
+	
+	
+	private boolean errorCheck(){
+		ArrayList<String> errors_ = new ArrayList<String>();
+		errors_ = data1.getErrors();
+		if(errors_.size() == 0){
+			return false;
+		}
+		else{
+			for(int i = 0; i < errors_.size(); i++){
+				output.add(errors_.get(i));
+			}
+			return true;
 		}
 	}
 }

@@ -22,7 +22,7 @@ public class BasicEvaluator {
 		try {
 			evalExpr = (Double) engine.eval(putValuesIn(expr));
 		} catch (ScriptException e) {
-			// TODO Auto-generated catch block
+			data1.illegalFormula = true;
 			e.printStackTrace();
 		}
 		return evalExpr;
@@ -33,7 +33,7 @@ public class BasicEvaluator {
 		try {
 			evalExpr = (Boolean) engine.eval(putValuesIn(expr));
 		} catch (ScriptException e) {
-			// TODO Auto-generated catch block
+			data1.illegalFormula = true;
 			e.printStackTrace();
 		}
 		return evalExpr;
@@ -117,7 +117,6 @@ public class BasicEvaluator {
 				}
 				else{
 					convert += data1.getVar(varAt);
-					// TODO illegal formula check
 				}
 				
 			}
@@ -160,7 +159,6 @@ public class BasicEvaluator {
 			String funInput = getNextExpression(pos+3, inString);
 			String formula_ = data1.getFormula(funLet, funInput);
 			inString = inString.replace("FN"+funLet+funInput, formula_);
-			// TODO undefined function check
 		}
 		return inString;
 	}

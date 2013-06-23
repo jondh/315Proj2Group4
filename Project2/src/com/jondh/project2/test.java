@@ -35,6 +35,7 @@ public class test {
 		ASTtree.ASTlet let55 = tree.new ASTlet("P(2)","FNX(-3)",55);
 		ASTtree.ASTprint print60 = tree.new ASTprint(pr60,60);
 		ASTtree.ASTdata data1000 = tree.new ASTdata(d1000,1000);
+		ASTtree.ASTend end2000 = tree.new ASTend(2000);
 		
 		tree.root.leftnode = for10;
 		for10.rightnode = read20;
@@ -44,6 +45,7 @@ public class test {
 		def50.leftnode = let55;
 		let55.leftnode = print60;
 		print60.leftnode = data1000;
+		data1000.leftnode = end2000;
 		
 		// for 1 -> 100 print i*i*i
 //		ASTtree.printStruct ps0 = tree.new printStruct("I*I*I",';');
@@ -138,16 +140,18 @@ public class test {
 //		print97.leftnode = next98;
 //		for90.leftnode = print105;
 		
-		tree.run();
+		
+		ArrayList<String> output = new ArrayList<String>();
+		output = tree.run();
+		for(int i = 0; i < output.size(); i++){
+			System.out.println(output.get(i));
+		}
 		
 		ArrayList<String> program = new ArrayList<String>();
 		program = tree.print();
 		for(int i = 0; i < program.size(); i++){
 			System.out.println(program.get(i));
 		}
-		ScriptEngineManager mgr = new ScriptEngineManager();
-	    ScriptEngine engine = mgr.getEngineByName("JavaScript");
-	    System.out.println(engine.eval("Math.round(5.45/2)"));
 	}
 
 }
