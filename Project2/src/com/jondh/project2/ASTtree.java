@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 
 /* 
  * Current structure of tree: Every node (except FOR) should only use its
@@ -25,12 +22,11 @@ public class ASTtree {
 	ASTnode root;
 	
 	BasicData data1;
-	
-	ScriptEngineManager mgr = new ScriptEngineManager();
-    ScriptEngine engine = mgr.getEngineByName("JavaScript");
+	BasicEvaluator eval1;
 	
     public ASTtree(){
     	data1 = new BasicData();
+    	eval1 = new BasicEvaluator(data1);
     	ASTtree.ASTnode r = new ASTnode();
     	root = r;
     }
@@ -117,7 +113,7 @@ public class ASTtree {
 					size = size.replace("(", "");
 					size = size.replace(")", "");
 					String varList = variables.get(i).charAt(0)+"";
-					int sizeList = (int) (evalExpr(size) - 0);
+					int sizeList = (int) (eval1.evalExpr(size) - 0);
 					dataInserted = data1.insertList(varList, sizeList, data1.getData()); 
 				}
 				else{
@@ -157,11 +153,11 @@ public class ASTtree {
 				String size = equal.substring(1);
 				size = size.replace("(", "");
 				size = size.replace(")", "");
-				int index = evalExpr(size).intValue();
-				data1.insertList(varList, index, evalExpr(expr));
+				int index = eval1.evalExpr(size).intValue();
+				data1.insertList(varList, index, eval1.evalExpr(expr));
 			}
 			else{
-				data1.updateVar(equal, evalExpr(expr));
+				data1.updateVar(equal, eval1.evalExpr(expr));
 			}
 			if(leftnode != null){
 				leftnode.eval();
@@ -217,14 +213,14 @@ public class ASTtree {
 		public boolean eval(){
 			ArrayList<String> evalSplit = new ArrayList<String>();
 			for(int j = 0; j < items.size(); j++){
-				evalSplit = splitExpression(items.get(j).statement);
+				evalSplit = eval1.splitExpression(items.get(j).statement);
 				
 				for(int i = 0; i < evalSplit.size(); i++){
 					if(evalSplit.get(i).charAt(0) == '"'){
 						strBuffer += evalSplit.get(i).replace("\"", "");
 					}
 					else{
-						strBuffer += formatOut(evalExpr(evalSplit.get(i)));
+						strBuffer += formatOut(eval1.evalExpr(evalSplit.get(i)));
 					}
 				}
 				if(items.get(j).lineType == ','){
@@ -316,21 +312,14 @@ public class ASTtree {
 		}
 		
 		public boolean eval(){
-			boolean cond = false;
-			// Runs the conditional in javascript, throws scripting exception
-		    try {
-				if((Boolean) engine.eval(putValuesIn(conditional))){ //TODO
-					cond = true;
-				}
-			} catch (ScriptException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			if(cond){ // TODO if inputted statement is true
+			boolean cond = eval1.evalExprB(conditional);
+			
+			if(cond){
 				if(nodes.containsKey(gotoNode)){
 					nodes.get(gotoNode).eval();
 				}
 				else{
+					// TODO goto error
 					System.out.println("The node "+gotoNode+" does not exist. From IF THEN");
 					return false;
 				}
@@ -368,7 +357,7 @@ public class ASTtree {
 		ASTfor(String nVar, String nIni, String toCond, Double step, int lnNum){
 			forVar = nVar;
 			initialValue = nIni;
-			until = evalExpr(putValuesIn(toCond));
+			until = eval1.evalExpr(toCond);
 			stepBy = step;
 			linenumber = lnNum;
 			nodes.put(lnNum, this);
@@ -379,7 +368,7 @@ public class ASTtree {
 		
 		public boolean eval(){
 			if(initial == true){ //Initial input var to expression
-				Double evalExpr = evalExpr(putValuesIn(initialValue))-stepBy;
+				Double evalExpr = eval1.evalExpr(initialValue)-stepBy;
 				data1.updateVar(forVar, evalExpr);
 				initial = false;
 			}
@@ -524,285 +513,6 @@ public class ASTtree {
 			System.out.println(strBuffer);
 			return false;
 		}
-	}
-	
-	protected Double evalExpr(String expr){
-		Double evalExpr = 0.0;
-		try {
-			evalExpr = (Double) engine.eval(putValuesIn(expr));
-		} catch (ScriptException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return evalExpr;
-	}
-	
-	/*
-	 * 	This function takes in a string with variables and functions.
-	 * 	 It returns the same string with the variables replaced with 
-	 *   their current values and the function replaces with equivalent
-	 *   functions readable by JavaScript.
-	 */
-	protected String putValuesIn(String expr){
-		String convert = "";
-		boolean function = false;
-		for(int i = 0; i < expr.length(); i++){
-			String varAt = "";
-			String listExpr = "";
-			boolean listVariable = false;
-			boolean scientific = false;
-			int listIndex = 0;
-			if(function && expr.charAt(i)=='('){
-				function = false;
-			}
-			if(i < expr.length()-1){
-				if(expr.charAt(i)>='A' && expr.charAt(i)<='Z' &&
-						expr.charAt(i+1)>='A' && expr.charAt(i+1)<='Z'){
-					function = true;
-				}
-				else if(expr.charAt(i)=='E' && (isNumber(expr.charAt(i+1)) ||
-							expr.charAt(i)=='-')){
-					scientific = true;
-				}
-			}
-			if(expr.charAt(i)>='A' && expr.charAt(i)<='Z' && !function && !scientific){
-				varAt += expr.charAt(i);
-				if(i < expr.length()-1){
-					if(expr.charAt(i+1)>='0' && expr.charAt(i+1)<='9'){
-						varAt += expr.charAt(i+1);
-						i++;
-					}
-					else if(expr.charAt(i+1) == '('){
-						i+=2;
-						while(expr.charAt(i) != ')'){
-							listExpr += expr.charAt(i);
-							i++;
-						}
-						listVariable = true;
-						listIndex = evalExpr(listExpr).intValue();
-					}
-				}
-				if(listVariable){
-					convert += data1.getList(varAt, listIndex);
-				}
-				else{
-					convert += data1.getVar(varAt);
-					// TODO illegal formula check
-				}
-				
-			}
-			else{
-				convert += expr.charAt(i);
-			}
-		}
-		return replaceFunctions(convert);
-	}
-
-	
-	
-	private class FuncData{
-		String funcIn;
-		String funcOut;
-		
-		FuncData(String in, String out){
-			funcIn = in;
-			funcOut = out;
-		}
-	}
-	
-	protected String replaceFunctions(String inString){
-		ArrayList<FuncData> functionMap = new ArrayList<FuncData>();
-		functionMap = getReplaced();
-		inString = replaceRND(inString);
-		inString = replaceExp(inString);
-		inString = replaceUser(inString);
-		for(int i = 0; i < functionMap.size(); i++){
-			inString = inString.replace(functionMap.get(i).funcIn, functionMap.get(i).funcOut);
-		}
-		return inString;
-	}
-	
-	protected String replaceUser(String inString){
-		while(inString.indexOf("FN") >= 0){
-			int pos = inString.indexOf("FN");
-			String funLet = inString.charAt(pos+2) + "";
-			// Get the input for the function
-			String funInput = getNextExpression(pos+3, inString);
-			String formula_ = data1.getFormula(funLet, funInput);
-			inString = inString.replace("FN"+funLet+funInput, formula_);
-			// TODO undefined function check
-		}
-		return inString;
-	}
-	
-	protected String replaceExp(String inString){
-		while(inString.indexOf('^') > 0){
-			int pos = inString.indexOf('^');
-			String prevEpr = getPrevExpression(pos, inString);
-			String nextEpr = getNextExpression(pos, inString);
-			inString = inString.replace(prevEpr+'^'+nextEpr, "Math.pow("+prevEpr+","+nextEpr+")");
-		}
-		return inString;
-	}
-	
-	protected ArrayList<FuncData> getReplaced(){
-		ArrayList<FuncData> functionMap = new ArrayList<FuncData>();
-		FuncData data0 = new FuncData("SIN","Math.sin");
-		functionMap.add(data0);
-		FuncData data1 = new FuncData("COS","Math.cos");
-		functionMap.add(data1);
-		FuncData data2 = new FuncData("TAN","Math.tan");
-		functionMap.add(data2);
-		FuncData data3 = new FuncData("ATN","Math.atan");
-		functionMap.add(data3);
-		FuncData data4 = new FuncData("EXP(","Math.pow(Math.E,");
-		functionMap.add(data4);
-		FuncData data5 = new FuncData("ABS","Math.abs");
-		functionMap.add(data5);
-		FuncData data6 = new FuncData("LOG","Math.log");
-		functionMap.add(data6);
-		FuncData data7 = new FuncData("SQR","Math.sqrt");
-		functionMap.add(data7);
-		FuncData data8 = new FuncData("INT","Math.round");
-		functionMap.add(data8);
-		FuncData data9 = new FuncData("=","==");
-		functionMap.add(data9);
-		FuncData data10 = new FuncData("<>","!=");
-		functionMap.add(data10);
-		return functionMap;
-	}
-	
-	protected String getNextExpression(int pos, String inString){
-		String nextEpr = "";
-		if(inString.charAt(pos)=='^'){
-			pos++;
-			while(inString.charAt(pos)==' '){
-				nextEpr += inString.charAt(pos);
-				pos++;
-			}
-		}
-		
-		if(inString.charAt(pos)=='('){
-			int pare = 1;
-			nextEpr += inString.charAt(pos);
-			pos++;
-			while(pare != 0){
-				nextEpr += inString.charAt(pos);
-				if(inString.charAt(pos) == '('){
-					pare++;
-				}
-				else if(inString.charAt(pos) == ')'){
-					pare--;
-				}
-				pos++;
-			}
-		}
-		else{
-			while(inString.charAt(pos) == ' '){
-				pos++;
-			}
-			while(isLetter(inString.charAt(pos)) ||
-					isNumber(inString.charAt(pos))){
-				nextEpr += inString.charAt(pos);
-				pos++;
-			}
-		}
-		return nextEpr;
-	}
-	// pos is position of carrot, assumes a vaild expression before
-	// the carrot
-	protected String getPrevExpression(int pos, String inString){
-		String prevEpr = "";
-		pos--;
-		while(inString.charAt(pos) == ' '){
-			prevEpr = inString.charAt(pos) + prevEpr;
-			pos--;
-		}
-		if(inString.charAt(pos)==')'){
-			int pare = 1;
-			prevEpr = inString.charAt(pos) + prevEpr;
-			pos--;
-			while(pare != 0){
-				prevEpr = inString.charAt(pos) + prevEpr;
-				if(inString.charAt(pos) == ')'){
-					pare++;
-				}
-				else if(inString.charAt(pos) == '('){
-					pare--;
-				}
-				pos--;
-			}
-		}
-		else{
-			boolean negative = false;
-			while(isLetter(inString.charAt(pos)) ||
-					isNumber(inString.charAt(pos))){
-				prevEpr = inString.charAt(pos) + prevEpr;
-				pos--;
-				// check for negative number
-				if(pos>0){ 
-					if(inString.charAt(pos-1)=='-'){
-						negative = true;
-					}
-				}
-			}
-			if(negative){
-				prevEpr = '-' + prevEpr;
-			}
-		}
-		return prevEpr;
-	}
-	
-	protected String replaceRND(String inString){
-		while(inString.indexOf("RND") >= 0){
-			int strAt = inString.indexOf("RND") + 3;
-			String replaceStr = "RND";
-			replaceStr += getNextExpression(strAt, inString);
-			inString = inString.replace(replaceStr, "Math.random()");
-		}
-		return inString;
-	
-	}
-	
-	public boolean isNumber(char c){
-		if((c>='0' && c<='9') || c=='.'){
-			return true;
-		}
-		else return false;
-	}
-	public boolean isLetter(char c){
-		if((c>='A' && c<='Z') || (c>='a' && c<='z')){
-			return true;
-		}
-		else return false;
-	}
-
-	protected ArrayList<String> splitExpression(String expr){
-		ArrayList<String> parts = new ArrayList<String>();
-		for(int i = 0; i < expr.length(); i++){
-			while(expr.charAt(i) == ' ') i++;
-			if(expr.charAt(i) == '"'){
-				String quote = "" + expr.charAt(i);
-				i++;
-				while(expr.charAt(i) != '"'){
-					quote += expr.charAt(i);
-					i++;
-					if(i == expr.length()-1) break;
-				}
-				quote += expr.charAt(i);
-				parts.add(quote);
-			}
-			else{
-				String ex = "";
-				while(expr.charAt(i)!='"' && i<expr.length()-1 && expr.charAt(i)!=' '){
-					ex += expr.charAt(i);
-					i++;
-				}
-				ex += expr.charAt(i);
-				parts.add(ex);
-			}
-		}
-		return parts;
 	}
 	
 	public class printStruct{

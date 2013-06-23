@@ -23,6 +23,20 @@ public class BasicData {
 		outOfData = false;
 	}
 	
+	public ArrayList<String> getErrors(){
+		ArrayList<String> errors_ = new ArrayList<String>();
+		if(illegalFormula){
+			errors_.add("ILLEGAL FORMULA");
+		}
+		if(subscriptError){
+			errors_.add("SUBSCRIPT ERROR");
+		}
+		if(undefinedFunction){
+			errors_.add("UNDEFINED FUNCTION");
+		}
+		return errors_;
+	}
+	
 	public void insertData(Double data_){
 		data.add(data_);
 	}
