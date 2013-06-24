@@ -1,3 +1,8 @@
+/*
+ *  AUTHOR: Jonathan Harrison
+ *  LAST MODIFIED: 6/23/2013
+ */
+
 package com.jondh.project2;
 
 import java.util.ArrayList;
@@ -85,20 +90,12 @@ public class ASTtree {
 			}
 		}
 		
-		protected void evalLeftNode(){
-			if(leftnode == null || errorCheck()){
+		protected void evalNode(ASTnode node_){
+			if(node_ == null || errorCheck()){
 				output.add(strBuffer);
 			}
 			else{
-				leftnode.eval();
-			}
-		}
-		protected void evalRightNode(){
-			if(rightnode == null || errorCheck()){
-				output.add(strBuffer);
-			}
-			else{
-				rightnode.eval();
+				node_.eval();
 			}
 		}
 	}
@@ -143,7 +140,7 @@ public class ASTtree {
 				}
 			}
 			if(dataInserted){
-				evalLeftNode();
+				evalNode(leftnode);
 			}
 			else{
 				output.add(strBuffer);
@@ -181,7 +178,7 @@ public class ASTtree {
 			else{
 				data1.updateVar(equal, eval1.evalExpr(expr));
 			}
-			evalLeftNode();
+			evalNode(leftnode);
 		}
 	}
 
@@ -268,7 +265,7 @@ public class ASTtree {
 				}
 			}
 			
-			evalLeftNode();
+			evalNode(leftnode);
 		}
 		
 		private String formatOut(Double in){
@@ -340,7 +337,7 @@ public class ASTtree {
 				}
 			}
 			else{
-				evalLeftNode();
+				evalNode(leftnode);
 			}
 		}
 	}
@@ -386,18 +383,17 @@ public class ASTtree {
 				initial = false;
 			}
 			Double curVal = data1.getVar(forVar)+stepBy;
-			// TODO data1 check for error
 			if(stepBy>0 && curVal<=until){
 				data1.updateVar(forVar, curVal);
-				evalRightNode();
+				evalNode(rightnode);
 			}
 			else if(stepBy<0 && curVal>=until){
 				data1.updateVar(forVar, curVal);
-				evalRightNode();
+				evalNode(rightnode);
 			}
 			else{
 				initial = true;
-				evalLeftNode();
+				evalNode(leftnode);
 			}
 		}
 	}
@@ -445,7 +441,7 @@ public class ASTtree {
 		}
 		
 		public void eval(){
-			returnNode = this;
+			returnNode = leftnode;
 			if(nodes.containsKey(gotoLine)){
 				nodes.get(gotoLine).eval();
 			}
@@ -474,7 +470,9 @@ public class ASTtree {
 				output.add("ILLEGAL RETURN");
 			}
 			else{
-				returnNode.eval();
+				ASTnode tempReturn = returnNode;
+				returnNode = null;
+				tempReturn.eval();
 			}
 		}
 		
@@ -491,9 +489,14 @@ public class ASTtree {
 		String funVar;
 		String funLet;
 		
-		ASTdef(String l, String v, String fun, int lnNum){
-			funLet = l;
-			funVar = v;
+		ASTdef(String leftEq, String fun, int lnNum){
+			// get position of the Letter that defines the function
+			int pos = leftEq.indexOf("FN")+2;
+			// get inputted function variable & remove surrounding parenthesis
+			String funVar_ = eval1.getNextExpression(pos+1, leftEq);
+			funVar_ = funVar_.substring(1, funVar_.length()-1);
+			funLet = leftEq.charAt(pos)+"";
+			funVar = funVar_;
 			funct = fun;
 			linenumber = lnNum;
 			nodes.put(lnNum, this);
@@ -503,7 +506,7 @@ public class ASTtree {
 		
 		public void eval(){
 			data1.insertFormula(funLet, funVar, funct);
-			evalLeftNode();
+			evalNode(leftnode);
 		}
 	}
 	

@@ -1,3 +1,8 @@
+/*
+ *  AUTHOR: Jonathan Harrison
+ *  LAST MODIFIED: 6/23/2013
+ */
+
 package com.jondh.project2;
 
 import java.util.ArrayList;
@@ -6,16 +11,18 @@ import java.util.Map;
 
 
 public class BasicData {
-	ArrayList<Double> data = new ArrayList<Double>();
-	Map<String, Double> var = new HashMap<String, Double>();
-	Map<String, ArrayList<Double>> listVar = new HashMap<String, ArrayList<Double>>();
-	Map<String, String> functions = new HashMap<String, String>();
-	Map<String, String> functVar = new HashMap<String, String>();
+	//-------CLASS DATA--------//
+	private ArrayList<Double> data = new ArrayList<Double>();
+	private Map<String, Double> var = new HashMap<String, Double>();
+	private Map<String, ArrayList<Double>> listVar = new HashMap<String, ArrayList<Double>>();
+	private Map<String, String> functions = new HashMap<String, String>();
+	private Map<String, String> functVar = new HashMap<String, String>();
 	boolean illegalFormula;
 	boolean subscriptError;
 	boolean undefinedFunction;
 	boolean outOfData;
 	
+	// set error flags to false on construction
 	BasicData(){
 		illegalFormula = false;
 		subscriptError = false;
@@ -23,6 +30,10 @@ public class BasicData {
 		outOfData = false;
 	}
 	
+	/*
+	 *  This function checks for errors and return array list 
+	 *  	of strings containing the approiate error messages.
+	 */
 	public ArrayList<String> getErrors(){
 		ArrayList<String> errors_ = new ArrayList<String>();
 		if(illegalFormula){
@@ -37,6 +48,11 @@ public class BasicData {
 		return errors_;
 	}
 	
+	/*
+	 *  These function take either a signle double data value
+	 *  	or an ArrayList<Double> of data values and insert
+	 *  	them into the data array.
+	 */
 	public void insertData(Double data_){
 		data.add(data_);
 	}
@@ -46,6 +62,10 @@ public class BasicData {
 		}
 	}
 	
+	/*
+	 *  This function gets the next data value from the data
+	 *  	container (it is removed upon retrieval)
+	 */
 	public Double getData(){
 		if(data.size() > 0){
 			return data.remove(0);
@@ -56,9 +76,13 @@ public class BasicData {
 		}
 	}
 	
+	/*
+	 *  This function sets an inputted variable to an inserted
+	 *  	data value. If the variable does not exist, it is created
+	 *  	and initialized to the data value
+	 */
 	public boolean updateVar(String var_, Double data_){
 		if(outOfData){
-			System.out.println("Out of data, done."); //TODO
 			return false;
 		}
 		var.put(var_, data_);
@@ -91,7 +115,6 @@ public class BasicData {
 		}
 		list.set(index_, data_);
 		if(outOfData){
-			System.out.println("Out of data, done."); //TODO
 			return false;
 		}
 		listVar.put(var_, list);

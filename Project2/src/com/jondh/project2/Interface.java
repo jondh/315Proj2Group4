@@ -52,7 +52,7 @@ public class Interface extends BasicInterpreter {
 
 			//... Set textarea's initial text, scrolling, and border.
 			textLines.add("10 FOR X = 1 TO 100");
-			textLines.add("20 PRINT X, SQR(X)");
+			textLines.add("20 PRINT X, SQR(X);");
 			textLines.add("30 NEXT X");
 			textLines.add("40 END");
 

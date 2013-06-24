@@ -80,19 +80,18 @@ public class BasicInterpreter {
 	}
 
 	public enum LineType {
-		DATA, DEF, DIM, END, FOR, GO, GOSUB, IF, LET, 
+		DATA, DEF, DIM, END, FOR, GO, GOSUB, GOTO, IF, LET, 
 		NEXT, PRINT, READ, RETURN, STOP
 	}
 
 	protected void saveToAST(Vector<String> codeLines) {
-		LineType lineType = LineType.END;
+		LineType lineType = LineType.DATA;
 		tree.root = root;
 		topRoot = root;
 		for (int iter = 0; iter < codeLines.size(); ++iter) {
 			lineText = codeLines.get(iter);
-			findLineType();
+			lineType = findLineType();
 
-			System.out.println("Line Type: " + lineType);
 			readToAST();
 		}
 		ArrayList<String> ASTtext = tree.print();
@@ -104,12 +103,13 @@ public class BasicInterpreter {
 	}
 
 	protected void runFromAST() {
-		topRoot.eval();
+		//topRoot.run();
 		return;
 	}
 
 	private void readToAST() {
 		//ASTtree.ASTnode newRoot = tree.new ASTnode();
+		System.out.println("LineType: "+lineType);
 		if (lineType == LineType.IF) readIf();
 		else if (lineType == LineType.DIM) readDim();
 		else if (lineType == LineType.FOR) readFor();
@@ -155,30 +155,35 @@ public class BasicInterpreter {
 	}
 
 	private void readFor() {
+		//10 FOR X = 1 TO 100
 		//String nVar, String nIni, String toCond, Double step, int lnNum
-		
-		ASTtree.ASTfor forState = tree.new ASTfor("X", "1", "100", 1.0, lineNum);
+		int stepIndex = lineText.indexOf("STEP");
+		int equalIndex = lineText.indexOf("=");
+		int toIndex = lineText.indexOf("TO");
+		String stepStr = "";
+		String varStr = "";
+		String numStr = "";
+		String toStr = "";
+		double stepNum = 1.0;
+
+		if (stepIndex > 0) {
+			stepStr = lineText.substring(stepIndex, lineText.length()).trim();
+			lineText = lineText.substring(0, stepIndex-1).trim();
+			stepNum = Double.valueOf(stepStr);
+		}
+		varStr = lineText.substring(0, equalIndex-1).trim();
+		numStr = lineText.substring(equalIndex+1, toIndex-1).trim();
+		toStr = lineText.substring(toIndex+2).trim();
+
+		System.out.println("FOR "+varStr+" = "+numStr+" TO "+toStr+" STEP "+stepNum);
+		ASTtree.ASTfor forState = tree.new ASTfor(varStr,numStr,toStr,stepNum,lineNum);
 		root.leftnode = forState;
 		root = forState;
-		forLoop = true;
 	}
 
 	private void readLet() {
 		// TODO Auto-generated method stub
 		//ASTfor(String nVar, String nIni, String toCond, Double step, int lnNum){
-		int stepIndex = lineText.indexOf("STEP");
-		String stepStr = "";
-		double stepNum = 0.0;
-		
-		if (stepIndex > 0) {
-			stepStr = lineText.substring(stepIndex, lineText.length());
-			lineText = lineText.substring(0, stepIndex-1);
-			stepNum = Double.valueOf(stepStr);
-		}
-		
-		ASTtree.ASTlet letState = tree.new ASTlet("X1","(B1*A4-B2*A2)/D",37);
-		root.leftnode = letState;
-		root = letState;
 	}
 
 	private void readDef() {
@@ -187,43 +192,94 @@ public class BasicInterpreter {
 	}
 
 	private void readNext() {
-		// TODO Auto-generated method stub
-		ASTtree.ASTnext nextState = tree.new ASTnext("X", lineNum);
+		ASTtree.ASTnext nextState = tree.new ASTnext(lineText, lineNum);
 		root.leftnode = nextState;
 		root = nextState;
 	}
 
 	private void readGoToGoSub() {
 		// TODO Auto-generated method stub
-		if (lineType == LineType.GO) {
+		int goTo = 0;
+		if (lineType == LineType.GO || lineType == LineType.GOTO) {
 			ASTtree.ASTgoto goToState = tree.new ASTgoto(30,60);
 			root.leftnode = goToState;
 			root = goToState;
 		}
 		else {
-			ASTtree.ASTgosub goSubState = tree.new ASTgosub(10, lineNum);
+			goTo = Integer.valueOf(lineText);
+			ASTtree.ASTgosub goSubState = tree.new ASTgosub(goTo, lineNum);
+			root.leftnode = goSubState;
+			root = goSubState;
 		}
 	}
 
 	private void readPrint() {
 		// TODO Auto-generated method stub
-		if (lineType == LineType.PRINT) {
-			ArrayList<printStruct> pr55 = new ArrayList<printStruct>();
-			printStruct elem = tree.new printStruct("SQR(X)", 'R');
-			pr55.add(elem);
-			ASTtree.ASTprint printState = tree.new ASTprint(pr55,55);
-			root.leftnode = printState;
-			root = printState;
+		ArrayList<printStruct> printList = new ArrayList<printStruct>();
+		printStruct elem;
+		char printFormat = ' ';
+		String printStr = "";
+		int index = findCommaColon();
+
+		while (index != -1 && index < lineText.length()) {
+			printFormat = lineText.charAt(index);
+			printStr = lineText.substring(0, index).trim();
+			elem = tree.new printStruct(printStr, printFormat);
+			printList.add(elem);
+			lineText = lineText.substring(index+1);
+			index = findCommaColon();
 		}
-		//ASTtree.ASTread read30 = tree.new ASTread(vars30,30);
+		printFormat = testLastChar();
+		
+		lineText = lineText.trim();
+		elem = tree.new printStruct(lineText, printFormat);
+		printList.add(elem);
+		ASTtree.ASTprint printState = tree.new ASTprint(printList, lineNum);
+		root.leftnode = printState;
+		root = printState;
+	}
+
+	private char testLastChar() {
+		char printChar = ' ';
+		if (lineText.endsWith(",")) {
+			printChar = ',';
+			lineText = lineText.substring(0, lineText.length()-1).trim();
+		}
+		else if (lineText.endsWith(";")) {
+			printChar = ';';
+			lineText = lineText.substring(0, lineText.length()-1).trim();
+		}
+		else printChar = ' ';
+		return printChar;
+	}
+
+	private int findCommaColon() {
+		int commaIndex = lineText.indexOf(",");
+		int colonIndex = lineText.indexOf(";");
+		if (commaIndex != -1 || commaIndex != -1) {
+			if (commaIndex == -1) return colonIndex;
+			else if (colonIndex == -1) return commaIndex;
+			else if (commaIndex < colonIndex) return commaIndex;
+			else return colonIndex;
+		}
+		else return -1;
 	}
 
 	private void readEndReturn() {
 		// TODO Auto-generated method stub
-
+		if (lineType == LineType.END) {
+			ASTtree.ASTend endState = tree.new ASTend(lineNum);
+			root.leftnode = endState;
+			root = endState;
+		}
+		else {
+			ASTtree.ASTreturn returnState = tree.new ASTreturn(lineNum);
+			root.leftnode = returnState;
+			root = returnState;
+		}
 	}
 
-	private void findLineType() {
+	private LineType findLineType() {
 		String lineNumStr = " ";
 		String lineTypeStr = " ";
 		int spaceIndex = lineText.indexOf(" ");
@@ -233,14 +289,12 @@ public class BasicInterpreter {
 		lineText = lineText.substring(spaceIndex + 1);
 
 		spaceIndex = lineText.indexOf(" ");
-		if (spaceIndex == -1) 
-			lineTypeStr = lineText;
-		else {
-			lineTypeStr = lineText.substring(0, spaceIndex);
+		if (spaceIndex != -1) {
+			lineTypeStr = lineText.substring(0,spaceIndex);
+			lineText = lineText.substring(spaceIndex).trim();
 		}
-
+		else lineTypeStr = lineText;
 		lineType = LineType.valueOf(lineTypeStr.trim());
-		return;
+		return lineType;
 	}
-
 }

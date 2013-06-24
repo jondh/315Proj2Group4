@@ -1,3 +1,8 @@
+/*
+ *  AUTHOR: Jonathan Harrison
+ *  LAST MODIFIED: 6/23/2013
+ */
+
 package com.jondh.project2;
 
 import java.util.ArrayList;
@@ -11,12 +16,35 @@ public class BasicEvaluator {
     ScriptEngine engine;
     BasicData data1;
     
+    /*
+     * The constructor starts the JavaScipt engine and
+     * 		links the inputted BasicData class.
+     */
 	BasicEvaluator(BasicData data_){
 		ScriptEngineManager mgr = new ScriptEngineManager();
 		engine = mgr.getEngineByName("JavaScript");
 		data1 = data_;
 	}
 	
+	/*
+	 *  The purpose of this class is to define a BASIC function
+	 *  	(funcIn) and its equivalent JavaScript function (funcOut)
+	 */
+	private class FuncData{
+		String funcIn;
+		String funcOut;
+		
+		FuncData(String in, String out){
+			funcIn = in;
+			funcOut = out;
+		}
+	}
+	
+	/*
+	 *  This function evaluates an exrpession in BASIC by converting
+	 *  	it to legal javascript and then returns the result as 
+	 *  	a double
+	 */
 	public Double evalExpr(String expr){
 		Double evalExpr = 0.0;
 		try {
@@ -28,6 +56,11 @@ public class BasicEvaluator {
 		return evalExpr;
 	}
 	
+	/*
+	 *  This function evaluates a relation in BASIC by converting
+	 *  	it to legal javascript and then retutns the result as
+	 *  	a boolean
+	 */
 	public boolean evalExprB(String expr){
 		Boolean evalExpr = false;
 		try {
@@ -39,6 +72,12 @@ public class BasicEvaluator {
 		return evalExpr;
 	}
 	
+	/*
+	 *  This function takes an String of one or more "expressions"
+	 *  	(a BASIC string or variable) and splits the string into
+	 *  	strings of each string or variables and returns an arraylist
+	 *  	of these
+	 */
 	public ArrayList<String> splitExpression(String expr){
 		ArrayList<String> parts = new ArrayList<String>();
 		for(int i = 0; i < expr.length(); i++){
@@ -68,7 +107,7 @@ public class BasicEvaluator {
 	}
 	
 	/*
-	 * 	This function takes in a string with variables and functions.
+	 * 	This function takes in a string with BASIC variables and functions.
 	 * 	 It returns the same string with the variables replaced with 
 	 *   their current values and the function replaces with equivalent
 	 *   functions readable by JavaScript.
@@ -126,19 +165,11 @@ public class BasicEvaluator {
 		}
 		return replaceFunctions(convert);
 	}
-
 	
-	
-	private class FuncData{
-		String funcIn;
-		String funcOut;
-		
-		FuncData(String in, String out){
-			funcIn = in;
-			funcOut = out;
-		}
-	}
-	
+	/*
+	 *  This function takes a string with BASIC functions and input
+	 *  	and converts them to JavaScript function.
+	 */
 	private String replaceFunctions(String inString){
 		ArrayList<FuncData> functionMap = new ArrayList<FuncData>();
 		functionMap = getReplaced();
@@ -151,6 +182,11 @@ public class BasicEvaluator {
 		return inString;
 	}
 	
+	/*
+	 *  This function takes a string with user defined BASIC functions
+	 *  	(ie. FNX(Y)). It replaces the function with its definition
+	 *  	and replaces the varibale with what was inputted.
+	 */
 	private String replaceUser(String inString){
 		while(inString.indexOf("FN") >= 0){
 			int pos = inString.indexOf("FN");
@@ -163,6 +199,10 @@ public class BasicEvaluator {
 		return inString;
 	}
 	
+	/*
+	 *  This function replaces the BASIC exponent operator ^
+	 *  	with the equivalent JavaScript function Math.pow()
+	 */
 	private String replaceExp(String inString){
 		while(inString.indexOf('^') > 0){
 			int pos = inString.indexOf('^');
@@ -173,6 +213,10 @@ public class BasicEvaluator {
 		return inString;
 	}
 	
+	/*
+	 *  This function defines an ArrayList of BASIC functions paired
+	 *  	with their approiate JavaScript conversions
+	 */
 	private ArrayList<FuncData> getReplaced(){
 		ArrayList<FuncData> functionMap = new ArrayList<FuncData>();
 		FuncData data0 = new FuncData("SIN","Math.sin");
@@ -200,7 +244,12 @@ public class BasicEvaluator {
 		return functionMap;
 	}
 	
-	private String getNextExpression(int pos, String inString){
+	/*
+	 *  This function takes an input string (math expression) and
+	 *  	a position in the String. It then returns the next
+	 *  	mathematical expression after this position.
+	 */
+	public String getNextExpression(int pos, String inString){
 		String nextEpr = "";
 		if(inString.charAt(pos)=='^'){
 			pos++;
@@ -237,8 +286,12 @@ public class BasicEvaluator {
 		}
 		return nextEpr;
 	}
-	// pos is position of carrot, assumes a vaild expression before
-	// the carrot
+	
+	/*
+	 *  This function takes an input string (math expression) and
+	 *  	a position in the String. It then returns the previous
+	 *  	mathematical expression after this position.
+	 */
 	private String getPrevExpression(int pos, String inString){
 		String prevEpr = "";
 		pos--;
@@ -281,6 +334,10 @@ public class BasicEvaluator {
 		return prevEpr;
 	}
 	
+	/*
+	 *  This function replaces the BASIC function RND and any inputted
+	 *  	values with the equivalent JavaScript functin Math.random()
+	 */
 	private String replaceRND(String inString){
 		while(inString.indexOf("RND") >= 0){
 			int strAt = inString.indexOf("RND") + 3;
@@ -292,6 +349,10 @@ public class BasicEvaluator {
 	
 	}
 	
+	/*
+	 *  These functions check whether the inputted char
+	 *  	is a number or letter and returns a boolean
+	 */
 	private boolean isNumber(char c){
 		if((c>='0' && c<='9') || c=='.'){
 			return true;
