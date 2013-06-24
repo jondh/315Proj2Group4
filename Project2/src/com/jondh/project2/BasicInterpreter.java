@@ -12,6 +12,7 @@ public class BasicInterpreter {
 	ASTtree tree = new ASTtree();
 	ASTtree.ASTnode topRoot = tree.new ASTnode();
 	ASTtree.ASTnode root = tree.new ASTnode();
+	ASTtree.ASTnode forRoot = tree.new ASTnode();
 	LineType lineType;
 	int lineNum = 0;
 	String lineText;
@@ -94,6 +95,7 @@ public class BasicInterpreter {
 
 			readToAST();
 		}
+		
 		ArrayList<String> ASTtext = tree.print();
 		System.out.println("AST: ");
 		for(int i = 0; i < ASTtext.size(); ++i) {
@@ -103,7 +105,12 @@ public class BasicInterpreter {
 	}
 
 	protected void runFromAST() {
-		//topRoot.run();
+		ArrayList<String> output = tree.run();
+		System.out.println("Output:");
+		for (int i = 0; i < output.size(); ++i) {
+			System.out.println(output.get(i));
+		}
+		System.out.println("Done");
 		return;
 	}
 
@@ -200,6 +207,8 @@ public class BasicInterpreter {
 		String numStr = "";
 		String toStr = "";
 		double stepNum = 1.0;
+		
+		forRoot = root;
 
 		if (stepIndex > 0) {
 			stepStr = lineText.substring(stepIndex, lineText.length()).trim();
@@ -241,6 +250,7 @@ public class BasicInterpreter {
 		ASTtree.ASTnext nextState = tree.new ASTnext(lineText, lineNum);
 		root.leftnode = nextState;
 		root = nextState;
+		root = forRoot;
 	}
 
 	private void readGoToGoSub() {
