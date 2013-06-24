@@ -117,10 +117,10 @@ public class BasicInterpreter {
 		else if (lineType == LineType.DEF) readDef();
 		else if (lineType == LineType.NEXT) readNext();
 		else if (lineType == LineType.PRINT) readPrint();
+		else if (lineType == LineType.DATA) readData();
+		else if (lineType == LineType.READ) readRead();
 		else if (lineType == LineType.GO || lineType == LineType.GOSUB) 
 			readGoToGoSub();
-		else if (lineType == LineType.DATA || (lineType == LineType.READ))
-			readDataRead();
 		else if (lineType == LineType.END || lineType == LineType.RETURN)
 			readEndReturn();
 		/*if (lineType == LineType.FOR) {
@@ -130,8 +130,44 @@ public class BasicInterpreter {
 		root = newRoot;*/
 	}
 
-	private void readDataRead() {
-		// TODO Auto-generated method stub
+	private void readData() {
+		ArrayList<Double> dataList = new ArrayList<Double>();
+		String dataStr = "";
+		double dataNum = 0.0;
+		int commaIndex = lineText.indexOf(",");
+		
+		while (commaIndex != -1 && commaIndex < lineText.length()) {
+			dataStr = lineText.substring(0, commaIndex).trim();
+			lineText = lineText.substring(commaIndex+1).trim();
+			dataNum = Double.valueOf(dataStr);
+			dataList.add(dataNum);
+			commaIndex = lineText.indexOf(",");
+		}
+
+		dataNum = Double.valueOf(lineText.trim());
+		dataList.add(dataNum);
+
+		ASTtree.ASTdata dataState = tree.new ASTdata(dataList,lineNum);
+		root.leftnode = dataState;
+		root = dataState;
+	}
+	
+	private void readRead() {
+		ArrayList<String> readList = new ArrayList<String>();
+		String readStr = "";
+		int commaIndex = lineText.indexOf(",");
+		
+		while (commaIndex != -1 && commaIndex < lineText.length()) {
+			readStr = lineText.substring(0, commaIndex).trim();
+			lineText = lineText.substring(commaIndex+1).trim();
+			readList.add(readStr);
+			commaIndex = lineText.indexOf(",");
+		}
+
+		readList.add(lineText.trim());
+		ASTtree.ASTread readState = tree.new ASTread(readList,lineNum);
+		root.leftnode = readState;
+		root = readState;
 	}
 
 	private void readIf() {
@@ -155,7 +191,6 @@ public class BasicInterpreter {
 	}
 
 	private void readFor() {
-		//10 FOR X = 1 TO 100
 		//String nVar, String nIni, String toCond, Double step, int lnNum
 		int stepIndex = lineText.indexOf("STEP");
 		int equalIndex = lineText.indexOf("=");
@@ -177,18 +212,29 @@ public class BasicInterpreter {
 
 		System.out.println("FOR "+varStr+" = "+numStr+" TO "+toStr+" STEP "+stepNum);
 		ASTtree.ASTfor forState = tree.new ASTfor(varStr,numStr,toStr,stepNum,lineNum);
-		root.leftnode = forState;
+		root.rightnode = forState;
 		root = forState;
 	}
 
 	private void readLet() {
-		// TODO Auto-generated method stub
 		//ASTfor(String nVar, String nIni, String toCond, Double step, int lnNum){
+		int equalIndex = lineText.indexOf("=");
+		String eqLeft = lineText.substring(0, equalIndex).trim();
+		String eqRight = lineText.substring(0, equalIndex).trim();
+
+		ASTtree.ASTlet letState = tree.new ASTlet(eqLeft, eqRight, lineNum);
+		root.leftnode = letState;
+		root = letState;
 	}
 
 	private void readDef() {
-		// TODO Auto-generated method stub
+		int equalIndex = lineText.indexOf("=");
+		String eqLeft = lineText.substring(0, equalIndex).trim();
+		String eqRight = lineText.substring(0, equalIndex).trim();
 
+		ASTtree.ASTdef defState = tree.new ASTdef(eqLeft, eqRight, lineNum);
+		root.leftnode = defState;
+		root = defState;
 	}
 
 	private void readNext() {
@@ -198,7 +244,6 @@ public class BasicInterpreter {
 	}
 
 	private void readGoToGoSub() {
-		// TODO Auto-generated method stub
 		int goTo = 0;
 		if (lineType == LineType.GO || lineType == LineType.GOTO) {
 			ASTtree.ASTgoto goToState = tree.new ASTgoto(30,60);
@@ -214,7 +259,6 @@ public class BasicInterpreter {
 	}
 
 	private void readPrint() {
-		// TODO Auto-generated method stub
 		ArrayList<printStruct> printList = new ArrayList<printStruct>();
 		printStruct elem;
 		char printFormat = ' ';
@@ -230,7 +274,7 @@ public class BasicInterpreter {
 			index = findCommaColon();
 		}
 		printFormat = testLastChar();
-		
+
 		lineText = lineText.trim();
 		elem = tree.new printStruct(lineText, printFormat);
 		printList.add(elem);
@@ -266,7 +310,6 @@ public class BasicInterpreter {
 	}
 
 	private void readEndReturn() {
-		// TODO Auto-generated method stub
 		if (lineType == LineType.END) {
 			ASTtree.ASTend endState = tree.new ASTend(lineNum);
 			root.leftnode = endState;

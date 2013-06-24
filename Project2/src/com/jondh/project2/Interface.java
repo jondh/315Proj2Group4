@@ -51,9 +51,11 @@ public class Interface extends BasicInterpreter {
 		public GUI() {
 
 			//... Set textarea's initial text, scrolling, and border.
+			textLines.add("5 READ X, D, E");
 			textLines.add("10 FOR X = 1 TO 100");
-			textLines.add("20 PRINT X, SQR(X);");
+			textLines.add("20 PRINT X; SQR(X); D; E");
 			textLines.add("30 NEXT X");
+			textLines.add("35 DATA 15.6, 20, 100.41");
 			textLines.add("40 END");
 
 			textArea.setText(vectorToString(textLines));
