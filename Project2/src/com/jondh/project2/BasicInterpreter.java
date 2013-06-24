@@ -1,10 +1,8 @@
 package com.jondh.project2;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Vector;
 
-import com.jondh.project2.ASTtree.ASTif;
 import com.jondh.project2.ASTtree.printStruct;
 
 public class BasicInterpreter {
@@ -20,64 +18,6 @@ public class BasicInterpreter {
 
 	public static void main(String[] args) {
 		new Interface();
-		//ASTtree astTree = new ASTtree();
-		/*
-		ArrayList<String> vars = new ArrayList<String>();
-		ArrayList<String> vars30 = new ArrayList<String>();
-		ArrayList<Double> data70 = new ArrayList<Double>();
-		ArrayList<Double> data80 = new ArrayList<Double>();
-		ArrayList<Double> data85 = new ArrayList<Double>();
-		ArrayList<String> pr55 = new ArrayList<String>();
-		vars.add("A1");
-		vars.add("A2");
-		vars.add("A3");
-		vars.add("A4");
-		vars30.add("B1");
-		vars30.add("B2");
-		data70.add(1.0);
-		data70.add(2.0);
-		data70.add(4.0);
-		data80.add(2.0);
-		data80.add(-7.0);
-		data80.add(5.0);
-		data85.add(1.0);
-		data85.add(3.0);
-		data85.add(4.0);
-		data85.add(-7.0);
-		pr55.add("X1");
-		pr55.add("X2");
-		ASTtree tree = new ASTtree();
-		ASTtree.ASTnode root = tree.new ASTnode();
-		tree.root = root;
-		ASTtree.ASTread read10 = tree.new ASTread(vars, 10);
-		ASTtree.ASTlet let15 = tree.new ASTlet("D","A1*A4-A3*A2",15);
-		ASTtree.ASTif if20 = tree.new ASTif("D == 0", 65, 20);
-		ASTtree.ASTread read30 = tree.new ASTread(vars30,30);
-		ASTtree.ASTlet let37 = tree.new ASTlet("X1","(B1*A4-B2*A2)/D",37);
-		ASTtree.ASTlet let42 = tree.new ASTlet("X2","(A1*B2-A3*B1)/D",42);
-		ASTtree.ASTprint print55 = tree.new ASTprint(pr55,55);
-		ASTtree.ASTgoto goto60 = tree.new ASTgoto(30,60);
-		ASTtree.ASTprint print65 = tree.new ASTprint("NO UNIQUE SOLUTION",65);
-		ASTtree.ASTdata d70 = tree.new ASTdata(data70,70);
-		ASTtree.ASTdata d80 = tree.new ASTdata(data80,80);
-		ASTtree.ASTdata d85 = tree.new ASTdata(data85,85);
-
-		root.leftnode = read10;
-		read10.leftnode = let15;
-		let15.leftnode = if20;
-		if20.leftnode = read30;
-		read30.leftnode = let37;
-		let37.leftnode = let42;
-		let42.leftnode = print55;
-		print55.leftnode = goto60;
-		goto60.leftnode = print65;
-		print65.leftnode = d70;
-		d70.leftnode = d80;
-		d80.leftnode = d85;
-
-		root.eval();
-		root.print();
-		 */
 	}
 
 	public enum LineType {
@@ -104,7 +44,7 @@ public class BasicInterpreter {
 		return;
 	}
 
-	protected void runFromAST() {
+	protected void runFromAST() {		
 		ArrayList<String> output = tree.run();
 		System.out.println("Output:");
 		for (int i = 0; i < output.size(); ++i) {
@@ -130,11 +70,6 @@ public class BasicInterpreter {
 			readGoToGoSub();
 		else if (lineType == LineType.END || lineType == LineType.RETURN)
 			readEndReturn();
-		/*if (lineType == LineType.FOR) {
-			root.rightnode = newRoot;
-		}
-		else root.leftnode = newRoot;
-		root = newRoot;*/
 	}
 
 	private void readData() {
@@ -155,7 +90,11 @@ public class BasicInterpreter {
 		dataList.add(dataNum);
 
 		ASTtree.ASTdata dataState = tree.new ASTdata(dataList,lineNum);
-		root.leftnode = dataState;
+		if (forLoop) {
+			root.rightnode = dataState;
+			//forLoop = false;
+		}
+		else root.leftnode = dataState;
 		root = dataState;
 	}
 	
@@ -173,7 +112,11 @@ public class BasicInterpreter {
 
 		readList.add(lineText.trim());
 		ASTtree.ASTread readState = tree.new ASTread(readList,lineNum);
-		root.leftnode = readState;
+		if (forLoop) {
+			root.rightnode = readState;
+			//forLoop = false;
+		}
+		else root.leftnode = readState;
 		root = readState;
 	}
 
@@ -189,12 +132,16 @@ public class BasicInterpreter {
 			System.out.println("eval: " + eval + " goto: " + goToNum);
 		}
 		ASTtree.ASTif ifState = tree.new ASTif(eval, 65, lineNum);
-
+		if (forLoop) {
+			root.rightnode = ifState;
+			//forLoop = false;
+		}
+		else root.leftnode = ifState;
+		root = ifState;
 	}
 
 	private void readDim() {
 		// TODO Auto-generated method stub
-
 	}
 
 	private void readFor() {
@@ -207,8 +154,6 @@ public class BasicInterpreter {
 		String numStr = "";
 		String toStr = "";
 		double stepNum = 1.0;
-		
-		forRoot = root;
 
 		if (stepIndex > 0) {
 			stepStr = lineText.substring(stepIndex, lineText.length()).trim();
@@ -219,10 +164,11 @@ public class BasicInterpreter {
 		numStr = lineText.substring(equalIndex+1, toIndex-1).trim();
 		toStr = lineText.substring(toIndex+2).trim();
 
-		System.out.println("FOR "+varStr+" = "+numStr+" TO "+toStr+" STEP "+stepNum);
 		ASTtree.ASTfor forState = tree.new ASTfor(varStr,numStr,toStr,stepNum,lineNum);
-		root.rightnode = forState;
+		root.leftnode = forState;
+		forRoot = forState;
 		root = forState;
+		forLoop = true;
 	}
 
 	private void readLet() {
@@ -232,7 +178,11 @@ public class BasicInterpreter {
 		String eqRight = lineText.substring(0, equalIndex).trim();
 
 		ASTtree.ASTlet letState = tree.new ASTlet(eqLeft, eqRight, lineNum);
-		root.leftnode = letState;
+		if (forLoop) {
+			root.rightnode = letState;
+			//forLoop = false;
+		}
+		else root.leftnode = letState;
 		root = letState;
 	}
 
@@ -242,7 +192,11 @@ public class BasicInterpreter {
 		String eqRight = lineText.substring(0, equalIndex).trim();
 
 		ASTtree.ASTdef defState = tree.new ASTdef(eqLeft, eqRight, lineNum);
-		root.leftnode = defState;
+		if (forLoop) {
+			root.rightnode = defState;
+			//forLoop = false;
+		}
+		else root.leftnode = defState;
 		root = defState;
 	}
 
@@ -251,19 +205,28 @@ public class BasicInterpreter {
 		root.leftnode = nextState;
 		root = nextState;
 		root = forRoot;
+		forLoop = false;
 	}
 
 	private void readGoToGoSub() {
 		int goTo = 0;
 		if (lineType == LineType.GO || lineType == LineType.GOTO) {
 			ASTtree.ASTgoto goToState = tree.new ASTgoto(30,60);
-			root.leftnode = goToState;
+			if (forLoop) {
+				root.rightnode = goToState;
+				//forLoop = false;
+			}
+			else root.leftnode = goToState;
 			root = goToState;
 		}
 		else {
 			goTo = Integer.valueOf(lineText);
 			ASTtree.ASTgosub goSubState = tree.new ASTgosub(goTo, lineNum);
-			root.leftnode = goSubState;
+			if (forLoop) {
+				root.rightnode = goSubState;
+				//forLoop = false;
+			}
+			else root.leftnode = goSubState;
 			root = goSubState;
 		}
 	}
@@ -289,7 +252,11 @@ public class BasicInterpreter {
 		elem = tree.new printStruct(lineText, printFormat);
 		printList.add(elem);
 		ASTtree.ASTprint printState = tree.new ASTprint(printList, lineNum);
-		root.leftnode = printState;
+		if (forLoop) {
+			root.rightnode = printState;
+			//forLoop = false;
+		}
+		else root.leftnode = printState;
 		root = printState;
 	}
 
@@ -322,12 +289,20 @@ public class BasicInterpreter {
 	private void readEndReturn() {
 		if (lineType == LineType.END) {
 			ASTtree.ASTend endState = tree.new ASTend(lineNum);
-			root.leftnode = endState;
+			if (forLoop) {
+				root.rightnode = endState;
+				//forLoop = false;
+			}
+			else root.leftnode = endState;
 			root = endState;
 		}
 		else {
 			ASTtree.ASTreturn returnState = tree.new ASTreturn(lineNum);
-			root.leftnode = returnState;
+			if (forLoop) {
+				root.rightnode = returnState;
+				//forLoop = false;
+			}
+			else root.leftnode = returnState;
 			root = returnState;
 		}
 	}
