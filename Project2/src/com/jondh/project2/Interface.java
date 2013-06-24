@@ -29,7 +29,7 @@ import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
 
 public class Interface extends BasicInterpreter {
-	public static class GUI extends JFrame implements DocumentListener, ActionListener {
+	public class GUI extends JFrame implements DocumentListener, ActionListener {
 		//============================================== instance variables
 		JTextArea textArea = new JTextArea(10, 30);
 		JTextField entryBar = new JTextField();
@@ -51,10 +51,10 @@ public class Interface extends BasicInterpreter {
 		public GUI() {
 
 			//... Set textarea's initial text, scrolling, and border.
-			textLines.add("80 FOR X = 1 TO 100");
+			textLines.add("10 FOR X = 1 TO 100");
 			textLines.add("20 PRINT X, SQR(X)");
-			textLines.add("50 NEXT X");
-			textLines.add("10 END");
+			textLines.add("30 NEXT X");
+			textLines.add("40 END");
 
 			textArea.setText(vectorToString(textLines));
 			textArea.setColumns(40);
@@ -132,8 +132,6 @@ public class Interface extends BasicInterpreter {
 					String num2 = " ";
 					int index1 = s1.indexOf(" ");
 					int index2 = s2.indexOf(" ");
-					boolean hasNum1 = Character.isDigit(s1.charAt(0));
-					boolean hasNum2 = Character.isDigit(s1.charAt(0));
 
 					num1 = s1.substring(0, index1);
 					num2 = s2.substring(0, index2);
@@ -186,7 +184,7 @@ public class Interface extends BasicInterpreter {
 			int index1 = inputText.indexOf(" ");
 			String funcName = inputText.substring(index1+1);
 			String funcNames = "DATA,DEF,END,FOR,GO,IF," +
-					"LET,NEXT,PRINT,READ,RETURN,STOP,";
+					"LET,NEXT,PRINT,READ,RETURN,";
 			int index2 = funcName.indexOf(" ");
 			int funcSize = funcName.length();
 			if (index2 != -1) {
@@ -210,7 +208,7 @@ public class Interface extends BasicInterpreter {
 		}
 
 		//============================================================= main
-		public static void main() {
+		public void main() {
 			JFrame win = new GUI();
 			win.setVisible(true);
 		}
@@ -227,31 +225,19 @@ public class Interface extends BasicInterpreter {
 		public void actionPerformed(ActionEvent e) {
 			if ("LISTPROGRAM".equals(e.getActionCommand())) {
 				System.out.println("ListProgram clicked");
-				textLines = deleteLineNums(textLines);
-				//List<Token> tokens = tokenize(vectorToString(textLines));
-				//for (int i = 0; i < tokens.size(); ++i) {
-				//	System.out.println("text at " + i + ": " + tokens.get(i).text + " " + tokens.get(i).type);
-				//}
-				tokenizeString(vectorToString(textLines));
+				saveToAST(textLines);
 			}
-			else System.out.println("RunProgram clicked");
-
-		}
-
-		private Vector<String> deleteLineNums(Vector<String> s1) {
-			int index = 0; 
-			for (int i = 0; i < s1.size(); ++i) {
-				index = s1.get(i).indexOf(" ");
-				s1.set(i, s1.get(i).substring(index+1));
+			else {
+				System.out.println("RunProgram clicked");
+				runFromAST();
 			}
-			return s1;
 		}
 	}
 	
 	public Interface() {
 		super();
 		GUI gui = new GUI();
-		GUI.main();
+		gui.main();
 	}
 	
 }
