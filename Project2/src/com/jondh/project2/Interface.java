@@ -181,9 +181,10 @@ public class Interface extends BasicInterpreter {
 		}
 
 		private boolean checkFuncName(String inputText) {
+			boolean okFuncName = true;
 			int index1 = inputText.indexOf(" ");
 			String funcName = inputText.substring(index1+1);
-			String funcNames = "DATA,DEF,END,FOR,GO,IF," +
+			String funcNames = "DATA,DEF,END,FOR,GO,GOTO,GUSUB,IF," +
 					"LET,NEXT,PRINT,READ,RETURN,";
 			int index2 = funcName.indexOf(" ");
 			int funcSize = funcName.length();
@@ -194,7 +195,25 @@ public class Interface extends BasicInterpreter {
 				funcName = funcName.substring(0, funcSize);
 			}
 			funcName += ",";
-			return funcNames.contains(funcName);
+			okFuncName = funcNames.contains(funcName) && checkFuncReqs(funcName, inputText);
+			
+			return okFuncName;
+		}
+
+		private boolean checkFuncReqs(String funcName, String inputText) {
+			if (funcName.contentEquals("FOR,")) {
+				return inputText.contains("=") && inputText.contains("TO");
+			}
+			else if (funcName.contentEquals("IF,")) {
+				return inputText.contains("THEN");
+			}
+			else if (funcName.contentEquals("GO,")) {
+				return inputText.contains("TO");
+			}
+			else if (funcName.contentEquals("LET,")) {
+				return inputText.contains("=");
+			}
+			return false;
 		}
 
 		private boolean checkLineNum(String inputText) {

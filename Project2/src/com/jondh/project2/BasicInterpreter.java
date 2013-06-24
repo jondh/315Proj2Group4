@@ -14,6 +14,7 @@ public class BasicInterpreter {
 	ASTtree.ASTnode root = tree.new ASTnode();
 	LineType lineType;
 	int lineNum = 0;
+	String lineText;
 	boolean forLoop = false;
 
 	public static void main(String[] args) {
@@ -77,7 +78,7 @@ public class BasicInterpreter {
 		root.print();
 		 */
 	}
-	
+
 	public enum LineType {
 		DATA, DEF, DIM, END, FOR, GO, GOSUB, IF, LET, 
 		NEXT, PRINT, READ, RETURN, STOP
@@ -88,9 +89,11 @@ public class BasicInterpreter {
 		tree.root = root;
 		topRoot = root;
 		for (int iter = 0; iter < codeLines.size(); ++iter) {
-			findLineType(codeLines.get(iter));
+			lineText = codeLines.get(iter);
+			findLineType();
+
 			System.out.println("Line Type: " + lineType);
-			readToAST(codeLines.get(iter));
+			readToAST();
 		}
 		ArrayList<String> ASTtext = tree.print();
 		System.out.println("AST: ");
@@ -105,21 +108,21 @@ public class BasicInterpreter {
 		return;
 	}
 
-	private void readToAST(String str) {
+	private void readToAST() {
 		//ASTtree.ASTnode newRoot = tree.new ASTnode();
-		if (lineType == LineType.IF) readIf(str);
-		else if (lineType == LineType.DIM) readDim(str);
-		else if (lineType == LineType.FOR) readFor(str);
-		else if (lineType == LineType.LET) readLet(str);
-		else if (lineType == LineType.DEF) readDef(str);
-		else if (lineType == LineType.NEXT) readNext(str);
+		if (lineType == LineType.IF) readIf();
+		else if (lineType == LineType.DIM) readDim();
+		else if (lineType == LineType.FOR) readFor();
+		else if (lineType == LineType.LET) readLet();
+		else if (lineType == LineType.DEF) readDef();
+		else if (lineType == LineType.NEXT) readNext();
+		else if (lineType == LineType.PRINT) readPrint();
 		else if (lineType == LineType.GO || lineType == LineType.GOSUB) 
-			readGoToGoSub(str);
-		else if (lineType == LineType.DATA || lineType == LineType.PRINT
-				|| (lineType == LineType.READ))
-			readDataPrintRead(str);
+			readGoToGoSub();
+		else if (lineType == LineType.DATA || (lineType == LineType.READ))
+			readDataRead();
 		else if (lineType == LineType.END || lineType == LineType.RETURN)
-			readEndReturn(str);
+			readEndReturn();
 		/*if (lineType == LineType.FOR) {
 			root.rightnode = newRoot;
 		}
@@ -127,45 +130,70 @@ public class BasicInterpreter {
 		root = newRoot;*/
 	}
 
-	private void readIf(String str) {
-		ASTtree.ASTif ifState = tree.new ASTif("D == 0", 65, 20);
-		root.leftnode = ifState;
-		root = ifState;
+	private void readDataRead() {
+		// TODO Auto-generated method stub
 	}
 
-	private void readDim(String str) {
+	private void readIf() {
+		String eval = "";
+		String lineNumStr = "";
+		int goToNum = 0;
+		int thenIndex = lineText.indexOf("THEN");
+		if (thenIndex != -1) {
+			eval = lineText.substring(0, thenIndex).trim();
+			lineNumStr = lineText.substring(thenIndex + 4, lineText.length());
+			goToNum = Integer.valueOf(lineNumStr.trim());
+			System.out.println("eval: " + eval + " goto: " + goToNum);
+		}
+		ASTtree.ASTif ifState = tree.new ASTif(eval, 65, lineNum);
+
+	}
+
+	private void readDim() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void readFor(String str) {
+	private void readFor() {
 		//String nVar, String nIni, String toCond, Double step, int lnNum
+		
 		ASTtree.ASTfor forState = tree.new ASTfor("X", "1", "100", 1.0, lineNum);
 		root.leftnode = forState;
 		root = forState;
 		forLoop = true;
 	}
 
-	private void readLet(String str) {
+	private void readLet() {
 		// TODO Auto-generated method stub
+		//ASTfor(String nVar, String nIni, String toCond, Double step, int lnNum){
+		int stepIndex = lineText.indexOf("STEP");
+		String stepStr = "";
+		double stepNum = 0.0;
+		
+		if (stepIndex > 0) {
+			stepStr = lineText.substring(stepIndex, lineText.length());
+			lineText = lineText.substring(0, stepIndex-1);
+			stepNum = Double.valueOf(stepStr);
+		}
+		
 		ASTtree.ASTlet letState = tree.new ASTlet("X1","(B1*A4-B2*A2)/D",37);
 		root.leftnode = letState;
 		root = letState;
 	}
 
-	private void readDef(String str) {
+	private void readDef() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void readNext(String str) {
+	private void readNext() {
 		// TODO Auto-generated method stub
 		ASTtree.ASTnext nextState = tree.new ASTnext("X", lineNum);
 		root.leftnode = nextState;
 		root = nextState;
 	}
 
-	private void readGoToGoSub(String str) {
+	private void readGoToGoSub() {
 		// TODO Auto-generated method stub
 		if (lineType == LineType.GO) {
 			ASTtree.ASTgoto goToState = tree.new ASTgoto(30,60);
@@ -177,7 +205,7 @@ public class BasicInterpreter {
 		}
 	}
 
-	private void readDataPrintRead(String str) {
+	private void readPrint() {
 		// TODO Auto-generated method stub
 		if (lineType == LineType.PRINT) {
 			ArrayList<printStruct> pr55 = new ArrayList<printStruct>();
@@ -190,25 +218,25 @@ public class BasicInterpreter {
 		//ASTtree.ASTread read30 = tree.new ASTread(vars30,30);
 	}
 
-	private void readEndReturn(String str) {
+	private void readEndReturn() {
 		// TODO Auto-generated method stub
 
 	}
 
-	private void findLineType(String str) {
+	private void findLineType() {
 		String lineNumStr = " ";
 		String lineTypeStr = " ";
-		int spaceIndex = str.indexOf(" ");
-		lineNumStr = str.substring(0, spaceIndex);
+		int spaceIndex = lineText.indexOf(" ");
+		lineNumStr = lineText.substring(0, spaceIndex);
 		lineNum = Integer.valueOf(lineNumStr);
 		System.out.println("Line Number: " + lineNum);
-		str = str.substring(spaceIndex + 1);
+		lineText = lineText.substring(spaceIndex + 1);
 
-		spaceIndex = str.indexOf(" ");
+		spaceIndex = lineText.indexOf(" ");
 		if (spaceIndex == -1) 
-			lineTypeStr = str;
+			lineTypeStr = lineText;
 		else {
-			lineTypeStr = str.substring(0, spaceIndex);
+			lineTypeStr = lineText.substring(0, spaceIndex);
 		}
 
 		lineType = LineType.valueOf(lineTypeStr.trim());
