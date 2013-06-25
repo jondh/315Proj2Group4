@@ -251,6 +251,7 @@ public class Interface extends BasicInterpreter {
 			else {
 				System.out.println("RunProgram clicked");
 				Vector<String> textLines2 = runFromAST();
+				
 				textArea.setText(vectorToString(textLines2));
 				runFromAST();
 			}

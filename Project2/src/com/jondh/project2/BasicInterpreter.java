@@ -45,13 +45,14 @@ public class BasicInterpreter {
 		return;
 	}
 
-	protected Vector runFromAST() {		
+	protected Vector<String> runFromAST() {		
 		ArrayList<String> output = tree.run();
 		Vector<String> textLines = new Vector<String>();
 		System.out.println("Output:");
 		
 		for (int i = 0; i < output.size(); ++i) {
 			System.out.println(output.get(i));
+			textLines.add(output.get(i));
 		}
 		System.out.println("Done");
 		return textLines;
