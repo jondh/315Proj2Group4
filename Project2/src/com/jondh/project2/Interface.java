@@ -1,3 +1,7 @@
+/*
+ *  AUTHOR: Matthew Kocmoud
+ *  LAST MODIFIED: 6/24/2013
+ */
 package com.jondh.project2;
 
 import java.awt.BorderLayout;
@@ -29,87 +33,97 @@ import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
 
 public class Interface extends BasicInterpreter {
-	GUI gui;
+	
 	public class GUI extends JFrame implements DocumentListener, ActionListener {
-		//============================================== instance variables
+		
 		JTextArea textArea = new JTextArea(10, 30);
 		JTextField entryBar = new JTextField();
-		JLabel statusText = new JLabel("Enter a line of BASIC code above: ");
+		String defaultStatus = "Enter a line of BASIC code above: ";
+		JLabel statusText = new JLabel(defaultStatus);
 
 		JButton listProgram = new JButton("List Program");
 		JButton runProgram = new JButton("Run Program");
+		JPanel content;
 		final static String ENTER = "enter line";
 		private Vector<String> textLines = new Vector<String>();
 
 		final Highlighter hilit;
 		final Highlighter.HighlightPainter painter;
-		Color  HILIT_COLOR = Color.LIGHT_GRAY;
+		Color  GCOLOR = Color.LIGHT_GRAY;
 		Color  ERROR_COLOR = Color.PINK;
 		final Color entryBg;
 		String identicalLine = "";
+		
+		boolean pushedListProgram = false;
 
-		//====================================================== constructor
-		public GUI() {
-
-			//... Set textarea's initial text, scrolling, and border.
-			textLines.add("10 FOR X = 1 TO 100");
-			textLines.add("20 PRINT X, SQR(X),");
-			textLines.add("30 NEXT X");
-			textLines.add("40 END");
-
-			textArea.setText(vectorToString(textLines));
-			textArea.setColumns(40);
-			textArea.setLineWrap(true);
-			textArea.setRows(20);
-			textArea.setWrapStyleWord(true);
-			textArea.setEditable(false);
-			JScrollPane scrollingArea = new JScrollPane(textArea);
-
+		public GUI() {			
+			setTextValues();
+			//set red error hilit
 			hilit = new DefaultHighlighter();
-			painter = new DefaultHighlighter.DefaultHighlightPainter(HILIT_COLOR);
+			painter = new DefaultHighlighter.DefaultHighlightPainter(GCOLOR);
 			textArea.setHighlighter(hilit);
 			entryBg = entryBar.getBackground();
 			entryBar.getDocument().addDocumentListener(this);
-
-			//... Get the content pane, set layout, add to center
-			JPanel content = new JPanel();
+			
+			setContentButtons();
+			statusText.setHorizontalAlignment(getX()/2); // align to middle
+			// set window characteristics.
+			this.setContentPane(content);
+			this.setTitle("Basic Interpreter");
+			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			this.pack();
+			// listen for entered text
+			InputMap im = 
+					entryBar.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+			ActionMap am = entryBar.getActionMap();
+			im.put(KeyStroke.getKeyStroke("ENTER"), ENTER);
+			am.put(ENTER, new EnterText());
+		}
+		
+		public void main() {
+			JFrame win = new GUI();
+			win.setVisible(true);
+		}
+		
+		// Get the content pane, define buttons
+		private void setContentButtons() { 
+			JScrollPane scrollingArea = new JScrollPane(textArea);
+			content = new JPanel();
 			content.setLayout(new BorderLayout());
 			content.add(scrollingArea, BorderLayout.PAGE_START);
 			content.add(entryBar, BorderLayout.CENTER);
 			content.add(statusText, BorderLayout.SOUTH);
 			content.add(listProgram, BorderLayout.BEFORE_LINE_BEGINS);
 			content.add(runProgram, BorderLayout.AFTER_LINE_ENDS);
-			statusText.setHorizontalAlignment(getX()/2);
-			//... Set window characteristics.
-			this.setContentPane(content);
-			this.setTitle("TextAreaDemo B");
-			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			this.pack();
-
+			
 			listProgram.addActionListener(this);
 			runProgram.addActionListener(this);
-			listProgram.setToolTipText("Click this button to list the program");
-			runProgram.setToolTipText("Click this button to run the program");
+			listProgram.setToolTipText("Click to list the program");
+			runProgram.setToolTipText("Click to run the program");
 			listProgram.setMnemonic(KeyEvent.VK_M);
 			runProgram.setMnemonic(KeyEvent.VK_N);
 			listProgram.setActionCommand("LISTPROGRAM");
 			runProgram.setActionCommand("RUNPROGRAM");
-
-			InputMap im = entryBar.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-			ActionMap am = entryBar.getActionMap();
-			im.put(KeyStroke.getKeyStroke("ENTER"), ENTER);
-			am.put(ENTER, new EnterText());
 		}
 
+		// define main scrollable text box
+		private void setTextValues() {
+			textArea.setText(vectorToString(textLines));
+			textArea.setColumns(40);
+			textArea.setLineWrap(true);
+			textArea.setRows(20);
+			textArea.setWrapStyleWord(true);
+			textArea.setEditable(false);
+		}
+		
+		// when ENTER pressed, add to main text area
 		class EnterText extends AbstractAction {
 			public void actionPerformed(ActionEvent ev) {
 				if (checkText()) {
 					textLines.add(entryBar.getText());
 					textLines = sortVectStrings(textLines);
 					textArea.setText(vectorToString(textLines));
-					//mainText = _resultArea.getText();
 					entryBar.setText("");
-					//inputBar.setBackground(entryBg);
 				}
 				else {
 					statusText.setText("Incorrect line above: try again");
@@ -117,6 +131,7 @@ public class Interface extends BasicInterpreter {
 			}
 		}
 
+		// a set way to outputting a vector
 		public String vectorToString(Vector<String> vect) {
 			String vectString = "";
 			for(int i = 0; i < vect.size(); i++) {
@@ -125,6 +140,7 @@ public class Interface extends BasicInterpreter {
 			return vectString;
 		}
 
+		// sort vectors using whole line number, not just first digit
 		public Vector<String> sortVectStrings(Vector<String> vect) {
 			Collections.sort(vect, new Comparator<String>()
 					{
@@ -136,21 +152,20 @@ public class Interface extends BasicInterpreter {
 
 					num1 = s1.substring(0, index1);
 					num2 = s2.substring(0, index2);
-
-					if (num1.equalsIgnoreCase(num2)) {
-						System.out.println("Found identical number\n");
-						identicalLine = s1;
-						statusText.setText("Deleting an identical line number");
+					if (num1.equalsIgnoreCase(num2)) { // if same line number
+						identicalLine = s1; // save for future elimination
+						statusText.setText("Deleting a same line number");
 					}
 					else 
-						statusText.setText("Enter a line of BASIC code above: ");
-					return Integer.valueOf(num1).compareTo(Integer.valueOf(num2));
+						statusText.setText(defaultStatus);
+					return Integer.valueOf(num1)
+							.compareTo(Integer.valueOf(num2));
 				}
 					});
+			// remove duplicate line number, leave newer
 			if (identicalLine.length() != 0) {
 				for (int i = 0; i < vect.size(); i++) {
 					if (vect.elementAt(i) == identicalLine) {
-						System.out.println("identicalLine: " + i);
 						vect.removeElementAt(i);
 						identicalLine = "";
 					}
@@ -158,29 +173,32 @@ public class Interface extends BasicInterpreter {
 			}
 			return vect;
 		}
-
+		
+		// make sure lines have line numbers, function names, requirements...
 		public boolean checkText() {
 			String inputText = entryBar.getText();
-
-
 			boolean correctData = true;
 			boolean hasLineNum = checkLineNum(inputText);
 			boolean hasFuncName = checkFuncName(inputText);
 
 			hilit.removeAllHighlights();
 
-			if (hasLineNum && hasFuncName) {   // match found
+			if (hasLineNum && hasFuncName && !textArea.getText().isEmpty()) {
 				int end = inputText.length();
-				//hilit.addHighlight(index, end, painter);
 				textArea.setCaretPosition(end);
-				entryBar.setBackground(entryBg);
-			} else {
-				entryBar.setBackground(ERROR_COLOR);
+				entryBar.setBackground(entryBg); // set default color
+			} 
+			else if (!textArea.getText().isEmpty()) {
+				entryBar.setBackground(ERROR_COLOR); // error color
 				correctData = false;
 			}
+			else if (hasLineNum && hasFuncName) {
+			}
+			else correctData = false;
 			return correctData;
 		}
 
+		// ensure pre-defined name
 		private boolean checkFuncName(String inputText) {
 			boolean okFuncName = true;
 			int index1 = inputText.indexOf(" ");
@@ -189,18 +207,20 @@ public class Interface extends BasicInterpreter {
 					"LET,NEXT,PRINT,READ,RETURN,";
 			int index2 = funcName.indexOf(" ");
 			int funcSize = funcName.length();
-			if (index2 != -1) {
+			
+			if (index2 != -1) { // cut off at end of string or space
 				funcName = funcName.substring(0, Math.min(index2, funcSize));
 			}
 			else {
 				funcName = funcName.substring(0, funcSize);
 			}
-			funcName += ",";
-			okFuncName = funcNames.contains(funcName) && checkFuncReqs(funcName, inputText);
-			
+			funcName += ","; // to make sure lines contain the whole name
+			okFuncName = funcNames.contains(funcName)
+					&& checkFuncReqs(funcName, inputText);
 			return okFuncName;
 		}
 
+		// ensure functions have needed parts
 		private boolean checkFuncReqs(String funcName, String inputText) {
 			if (funcName.contentEquals("FOR,")) {
 				return inputText.contains("=") && inputText.contains("TO");
@@ -227,12 +247,7 @@ public class Interface extends BasicInterpreter {
 			return false;
 		}
 
-		//============================================================= main
-		public void main() {
-			JFrame win = new GUI();
-			win.setVisible(true);
-		}
-
+		// needed to override these
 		public void changedUpdate(DocumentEvent e) {
 		}
 
@@ -242,32 +257,31 @@ public class Interface extends BasicInterpreter {
 		public void removeUpdate(DocumentEvent e) {
 		}
 
+		
 		public void actionPerformed(ActionEvent e) {
-			if ("LISTPROGRAM".equals(e.getActionCommand())) {
-				System.out.println("ListProgram clicked");
-				saveToAST(textLines);
-				
+			// when List Program is clicked
+			if ("LISTPROGRAM".equals(e.getActionCommand())
+					&& !textLines.isEmpty()) { 
+				statusText.setText("Now press 'Run Program' to run");
+				textLines = saveToAST(textLines);
+				textArea.setText(vectorToString(textLines));
+				pushedListProgram = true;
 			}
-			else {
-				System.out.println("RunProgram clicked");
+			else if (textLines.isEmpty()) 
+				statusText.setText("First you need to enter code");
+			else if (pushedListProgram){
+				statusText.setText("Here is the program output");
 				Vector<String> textLines2 = runFromAST();
-				
 				textArea.setText(vectorToString(textLines2));
 				runFromAST();
 			}
+			else statusText.setText("You must first press 'List Program'");
 		}
 	}
 	
 	public Interface() {
 		super();
-		gui = new GUI();
+		GUI gui = new GUI();
 		gui.main();
-	}
-	
-	public void setText(Vector vect) {
-		gui.textLines = vect; 
-		//gui.main();
-		//gui.textArea.setText("Hello");
-		//gui.repaint();
 	}
 }

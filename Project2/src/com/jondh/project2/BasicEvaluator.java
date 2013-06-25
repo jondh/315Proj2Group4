@@ -1,6 +1,6 @@
 /*
  *  AUTHOR: Jonathan Harrison
- *  LAST MODIFIED: 6/23/2013
+ *  LAST MODIFIED: 6/24/2013
  */
 
 package com.jondh.project2;
@@ -80,6 +80,9 @@ public class BasicEvaluator {
 	 */
 	public ArrayList<String> splitExpression(String expr){
 		ArrayList<String> parts = new ArrayList<String>();
+		if(expr.length() == 0){
+			parts.add("");
+		}
 		for(int i = 0; i < expr.length(); i++){
 			while(expr.charAt(i) == ' ') i++;
 			if(expr.charAt(i) == '"'){
@@ -152,10 +155,10 @@ public class BasicEvaluator {
 					}
 				}
 				if(listVariable){
-					convert += data1.getList(varAt, listIndex);
+					convert += " " + data1.getList(varAt, listIndex);
 				}
 				else{
-					convert += data1.getVar(varAt);
+					convert += " " + data1.getVar(varAt);
 				}
 				
 			}
@@ -173,11 +176,22 @@ public class BasicEvaluator {
 	private String replaceFunctions(String inString){
 		ArrayList<FuncData> functionMap = new ArrayList<FuncData>();
 		functionMap = getReplaced();
+		inString = replaceEquals(inString);
 		inString = replaceRND(inString);
 		inString = replaceExp(inString);
 		inString = replaceUser(inString);
 		for(int i = 0; i < functionMap.size(); i++){
 			inString = inString.replace(functionMap.get(i).funcIn, functionMap.get(i).funcOut);
+		}
+		return inString;
+	}
+	
+	private String replaceEquals(String inString){
+		if(inString.indexOf('=')>0){
+			int pos = inString.indexOf('=');
+			if(inString.charAt(pos-1)!='<' && inString.charAt(pos-1)!='>'){
+				inString = inString.replace("=", "");
+			}
 		}
 		return inString;
 	}
@@ -237,8 +251,8 @@ public class BasicEvaluator {
 		functionMap.add(data7);
 		FuncData data8 = new FuncData("INT","Math.round");
 		functionMap.add(data8);
-		FuncData data9 = new FuncData("=","==");
-		functionMap.add(data9);
+//		FuncData data9 = new FuncData("=","==");
+//		functionMap.add(data9);
 		FuncData data10 = new FuncData("<>","!=");
 		functionMap.add(data10);
 		return functionMap;

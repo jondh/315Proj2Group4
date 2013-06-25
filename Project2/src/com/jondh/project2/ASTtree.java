@@ -56,6 +56,7 @@ public class ASTtree {
     		}
     		printNode = printNode.leftnode;
     		//System.out.println(printNode.programLine);
+    		if(printNode == null) break;
     		printReturn.add(printNode.programLine);
     		if(printNode.rightnode != null){
     			returnNode.add(printNode); //get node to go back to
@@ -222,6 +223,7 @@ public class ASTtree {
 			nodes.put(lnNum, this);
 			programLine += linenumber+" PRINT ";
 			for(int i = 0; i < items.size(); i++){
+				System.out.println("IN TREE: " + items.get(i).statement + " " + items.get(i).lineType);
 				programLine += items.get(i).statement + items.get(i).lineType;
 			}
 		}
@@ -229,6 +231,11 @@ public class ASTtree {
 		public void eval(){
 			ArrayList<String> evalSplit = new ArrayList<String>();
 			for(int j = 0; j < items.size(); j++){
+				if(items.get(j).statement == ""){
+					output.add(strBuffer);
+					strBuffer = "";
+				}
+				else{
 				evalSplit = eval1.splitExpression(items.get(j).statement);
 				
 				for(int i = 0; i < evalSplit.size(); i++){
@@ -262,6 +269,7 @@ public class ASTtree {
 				else{
 					output.add(strBuffer);
 					strBuffer = "";
+				}
 				}
 			}
 			
@@ -492,7 +500,7 @@ public class ASTtree {
 		ASTdef(String leftEq, String fun, int lnNum){
 			// get position of the Letter that defines the function
 			int pos = leftEq.indexOf("FN")+2;
-			// get inputted function variable & remove surrounding parenthesis
+			// get inputted function variable & remove surrounding paraenthesis
 			String funVar_ = eval1.getNextExpression(pos+1, leftEq);
 			funVar_ = funVar_.substring(1, funVar_.length()-1);
 			funLet = leftEq.charAt(pos)+"";
