@@ -1,6 +1,6 @@
 /*
  *  AUTHOR: Jonathan Harrison
- *  LAST MODIFIED: 6/24/2013
+ *  LAST MODIFIED: 6/23/2013
  */
 
 package com.jondh.project2;
@@ -116,6 +116,8 @@ public class BasicEvaluator {
 	 *   functions readable by JavaScript.
 	 */
 	private String putValuesIn(String expr){
+		expr = replaceUser(expr); // do first to replace funcition variables
+		
 		String convert = "";
 		boolean function = false;
 		for(int i = 0; i < expr.length(); i++){
@@ -179,7 +181,6 @@ public class BasicEvaluator {
 		inString = replaceEquals(inString);
 		inString = replaceRND(inString);
 		inString = replaceExp(inString);
-		inString = replaceUser(inString);
 		for(int i = 0; i < functionMap.size(); i++){
 			inString = inString.replace(functionMap.get(i).funcIn, functionMap.get(i).funcOut);
 		}
@@ -190,7 +191,7 @@ public class BasicEvaluator {
 		if(inString.indexOf('=')>0){
 			int pos = inString.indexOf('=');
 			if(inString.charAt(pos-1)!='<' && inString.charAt(pos-1)!='>'){
-				inString = inString.replace("=", "");
+				inString = inString.replace("=", "==");
 			}
 		}
 		return inString;
@@ -222,7 +223,8 @@ public class BasicEvaluator {
 			int pos = inString.indexOf('^');
 			String prevEpr = getPrevExpression(pos, inString);
 			String nextEpr = getNextExpression(pos, inString);
-			inString = inString.replace(prevEpr+'^'+nextEpr, "Math.pow("+prevEpr+","+nextEpr+")");
+			System.out.println(inString + " " + prevEpr + " " + nextEpr);
+			inString = inString.replace(prevEpr+"^ "+nextEpr, "Math.pow("+prevEpr+","+nextEpr+")");
 		}
 		return inString;
 	}
@@ -267,10 +269,6 @@ public class BasicEvaluator {
 		String nextEpr = "";
 		if(inString.charAt(pos)=='^'){
 			pos++;
-			while(inString.charAt(pos)==' '){
-				nextEpr += inString.charAt(pos);
-				pos++;
-			}
 		}
 		
 		if(inString.charAt(pos)=='('){
@@ -295,6 +293,7 @@ public class BasicEvaluator {
 			while(isLetter(inString.charAt(pos)) ||
 					isNumber(inString.charAt(pos))){
 				nextEpr += inString.charAt(pos);
+				if(pos == inString.length()-1) break;
 				pos++;
 			}
 		}
@@ -354,6 +353,7 @@ public class BasicEvaluator {
 	 */
 	private String replaceRND(String inString){
 		while(inString.indexOf("RND") >= 0){
+			data1.illegalFormula = false;
 			int strAt = inString.indexOf("RND") + 3;
 			String replaceStr = "RND";
 			replaceStr += getNextExpression(strAt, inString);

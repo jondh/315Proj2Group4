@@ -119,6 +119,7 @@ public class ASTtree {
 			nodes.put(lnNum, this);
 			programLine = linenumber + " READ ";
 			for(int i = 0; i < variables.size(); i++){
+				System.out.println("!TREE READ: " + variables.get(i));
 				programLine += variables.get(i);
 				if(i<variables.size()-1){
 					programLine += ", ";
@@ -336,6 +337,7 @@ public class ASTtree {
 			boolean cond = eval1.evalExprB(conditional);
 			
 			if(cond){
+				
 				if(nodes.containsKey(gotoNode)){
 					nodes.get(gotoNode).eval();
 				}
@@ -368,6 +370,7 @@ public class ASTtree {
 		 */
 		String forVar;
 		String initialValue;
+		String toCond_;
 		Double until;
 		Double stepBy;
 		boolean initial = true;
@@ -375,7 +378,7 @@ public class ASTtree {
 		ASTfor(String nVar, String nIni, String toCond, Double step, int lnNum){
 			forVar = nVar;
 			initialValue = nIni;
-			until = eval1.evalExpr(toCond);
+			toCond_ = toCond;
 			stepBy = step;
 			linenumber = lnNum;
 			nodes.put(lnNum, this);
@@ -390,6 +393,7 @@ public class ASTtree {
 				data1.updateVar(forVar, evalExpr);
 				initial = false;
 			}
+			until = eval1.evalExpr(toCond_);
 			Double curVal = data1.getVar(forVar)+stepBy;
 			if(stepBy>0 && curVal<=until){
 				data1.updateVar(forVar, curVal);
@@ -479,7 +483,7 @@ public class ASTtree {
 			}
 			else{
 				ASTnode tempReturn = returnNode;
-				returnNode = null;
+				//returnNode = null;
 				tempReturn.eval();
 			}
 		}
