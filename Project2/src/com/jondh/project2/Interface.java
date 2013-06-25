@@ -29,6 +29,7 @@ import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
 
 public class Interface extends BasicInterpreter {
+	GUI gui;
 	public class GUI extends JFrame implements DocumentListener, ActionListener {
 		//============================================== instance variables
 		JTextArea textArea = new JTextArea(10, 30);
@@ -213,7 +214,7 @@ public class Interface extends BasicInterpreter {
 			else if (funcName.contentEquals("LET,")) {
 				return inputText.contains("=");
 			}
-			return false;
+			return true;
 		}
 
 		private boolean checkLineNum(String inputText) {
@@ -245,9 +246,12 @@ public class Interface extends BasicInterpreter {
 			if ("LISTPROGRAM".equals(e.getActionCommand())) {
 				System.out.println("ListProgram clicked");
 				saveToAST(textLines);
+				
 			}
 			else {
 				System.out.println("RunProgram clicked");
+				Vector<String> textLines2 = runFromAST();
+				textArea.setText(vectorToString(textLines2));
 				runFromAST();
 			}
 		}
@@ -255,8 +259,14 @@ public class Interface extends BasicInterpreter {
 	
 	public Interface() {
 		super();
-		GUI gui = new GUI();
+		gui = new GUI();
 		gui.main();
 	}
 	
+	public void setText(Vector vect) {
+		gui.textLines = vect; 
+		//gui.main();
+		//gui.textArea.setText("Hello");
+		//gui.repaint();
+	}
 }

@@ -12,12 +12,13 @@ public class BasicInterpreter {
 	ASTtree.ASTnode root = tree.new ASTnode();
 	ASTtree.ASTnode forRoot = tree.new ASTnode();
 	LineType lineType;
+	static Interface gui;
 	int lineNum = 0;
 	String lineText;
 	boolean forLoop = false;
 
 	public static void main(String[] args) {
-		new Interface();
+		gui = new Interface();
 	}
 
 	public enum LineType {
@@ -36,22 +37,24 @@ public class BasicInterpreter {
 			readToAST();
 		}
 		
+		System.out.println("Testing1 "+topRoot.leftnode.rightnode.leftnode.programLine);
+		
 		ArrayList<String> ASTtext = tree.print();
-		System.out.println("AST: ");
-		for(int i = 0; i < ASTtext.size(); ++i) {
-			System.out.println(ASTtext.get(i));
-		}
+		
+		Vector<String> textLines = new Vector<String>();
 		return;
 	}
 
-	protected void runFromAST() {		
+	protected Vector runFromAST() {		
 		ArrayList<String> output = tree.run();
+		Vector<String> textLines = new Vector<String>();
 		System.out.println("Output:");
+		
 		for (int i = 0; i < output.size(); ++i) {
 			System.out.println(output.get(i));
 		}
 		System.out.println("Done");
-		return;
+		return textLines;
 	}
 
 	private void readToAST() {
