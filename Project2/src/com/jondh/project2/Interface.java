@@ -1,3 +1,15 @@
+/*
+ *  AUTHOR: Matthew Kocmoud AND Jonathan Harrison
+ *  LAST MODIFIED: 6/25/2013
+ *  
+ *  CSCE 315 SUMMER 2013
+ *  PROJECT 2
+ *  
+ *  This class defines the GUI used by this BASIC compiler. It
+ *  	gets BASIC lines and passes them onto the intepreter as
+ *  	well as displaying the BASIC code and output.
+ */
+
 package com.jondh.project2;
 
 import java.awt.BorderLayout;
@@ -29,9 +41,9 @@ import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
 
 public class Interface extends BasicInterpreter {
-	GUI gui;
+
 	public class GUI extends JFrame implements DocumentListener, ActionListener {
-		//============================================== instance variables
+		
 		JTextArea textArea = new JTextArea(10, 30);
 		JTextField entryBar = new JTextField();
 		JLabel statusText = new JLabel("Enter a line of BASIC code above: ");
@@ -48,123 +60,7 @@ public class Interface extends BasicInterpreter {
 		final Color entryBg;
 		String identicalLine = "";
 
-		//====================================================== constructor
 		public GUI() {
-
-			//... Set textarea's initial text, scrolling, and border.
-//			textLines.add("10 FOR X = 1 TO 100");
-//			textLines.add("20 PRINT X, SQR(X),");
-//			textLines.add("30 NEXT X");
-//			textLines.add("40 END");
-			
-//			textLines.add("10 READ A1, A2, A3, A4");
-//			textLines.add("15 LET D = A1*A4-A3*A2");
-//			textLines.add("20 IF D = 0 THEN 65");
-//			textLines.add("30 READ B1, B2");
-//			textLines.add("37 LET X1 = (B1*A4-B2*A2)/D");
-//			textLines.add("42 LET X2= (A1*B2-A3*B1)/D");
-//			textLines.add("55 PRINT X1, X2");
-//			textLines.add("60 GO TO 30");
-//			textLines.add("65 PRINT \"NO UNIQUE SOLUTION\"");
-//			textLines.add("70 DATA 1, 2, 4");
-//			textLines.add("80 DATA 2, -7, 5");
-//			textLines.add("85 DATA 1, 3, 4, -7");
-//			textLines.add("90 END");
-			
-//			textLines.add("10 LET X = 0");
-//			textLines.add("20 LET X = X + 1");
-//			textLines.add("30 PRINT X, SQR(X)");
-//			textLines.add("40 IF X <= 100 THEN 20");
-//			textLines.add("50 END");
-			
-//			textLines.add("10 READ A, B");
-//			textLines.add("20 PRINT \"FIRST NO. =\" A, \"SECOND NO. =\"B");
-//			textLines.add("30 DATA 2.3, -3.13");
-//			textLines.add("40 END");
-			
-//			textLines.add("10 FOR I = 1 TO 12 STEP 0.5");
-//			textLines.add("20 PRINT I,");
-//			textLines.add("30 NEXT I");
-//			textLines.add("40 END");
-			
-//			textLines.add("10 FOR N = 1 TO 7");
-//			textLines.add("15 PRINT \"N = \"N");
-//			textLines.add("20 FOR I = 1 TO N");
-//			textLines.add("30 PRINT I^N,");
-//			textLines.add("40 NEXT I");
-//			textLines.add("50 PRINT   ");
-//			textLines.add("60 PRINT");
-//			textLines.add("70 NEXT N");
-//			textLines.add("80 END");
-			
-//			textLines.add("10 FOR I = 1 TO 100");
-//			textLines.add("20 PRINT I*I*I;");
-//			textLines.add("30 NEXT I");
-//			textLines.add("40 END");
-			
-//			textLines.add("10 FOR I = 1 TO 3");
-//			textLines.add("20 READ P(I)");
-//			textLines.add("25 PRINT I");
-//			textLines.add("30 NEXT I");
-//			textLines.add("40 FOR K = 1 TO 3");
-//			textLines.add("60 READ S(K)");
-//			textLines.add("80 NEXT K");
-//			textLines.add("90 FOR J = 1 TO 3");
-//			textLines.add("100 FOR L = 1 TO 3");
-//			textLines.add("105 LET B3 = P(L)");
-//			textLines.add("110 PRINT B3");
-//			textLines.add("120 NEXT L");
-//			textLines.add("130 NEXT J");
-//			textLines.add("135 DATA 1, 2, 3, 4, 5, 6, 7, 8");
-//			textLines.add("140 END");
-			
-//			textLines.add("10 FOR I = 1 TO 20");
-//			textLines.add("20 PRINT INT(10*RND(X));");
-//			textLines.add("30 NEXT I");
-//			textLines.add("40 END");
-			
-//			textLines.add("10 DEF FNF(Z) = SIN(Z*P)");
-//			textLines.add("20 LET P = 3.13159265/180");
-//			textLines.add("30 FOR X = 0 TO 90");
-//			textLines.add("40 PRINT X, FNF(X)");
-//			textLines.add("50 NEXT X");
-//			textLines.add("60 END");
-			
-//			textLines.add("10 LET X = 1");
-//			textLines.add("20 PRINT X");
-//			textLines.add("30 GOSUB 100");
-//			textLines.add("40 PRINT X");
-//			textLines.add("50 END");
-//			textLines.add("100 LET X = X*3");
-//			textLines.add("110 RETURN");
-			
-			textLines.add("10 PRINT \"A\", \"B\", \"C\", \"GCD\"");
-			textLines.add("20 READ A, B, C");
-			textLines.add("30 LET X = A");
-			textLines.add("40 LET Y = B");
-			textLines.add("50 GOSUB 200");
-			textLines.add("60 LET X = G");
-			textLines.add("70 LET Y = C");
-			textLines.add("80 GOSUB 200");
-			textLines.add("90 PRINT A, B, C, G");
-			textLines.add("100 GO TO 20");
-			textLines.add("110 DATA 60, 90, 120");
-			textLines.add("120 DATA 38456, 64872, 98765");
-			textLines.add("130 DATA 32, 384, 72");
-			textLines.add("200 LET Q = INT(X/Y)");
-			textLines.add("210 LET R = X-Q*Y");
-			textLines.add("220 IF R = 0.0 THEN 300");
-			textLines.add("230 LET X = Y");
-			textLines.add("240 LET Y = R");
-			textLines.add("250 GO TO 200");
-			textLines.add("300 LET G = Y");
-			textLines.add("310 RETURN");
-			textLines.add("999 END");
-			
-//			textLines.add("");
-//			textLines.add("");
-			
-
 			textArea.setText(vectorToString(textLines));
 			textArea.setColumns(75);
 			textArea.setLineWrap(true);
@@ -213,20 +109,141 @@ public class Interface extends BasicInterpreter {
 
 		class EnterText extends AbstractAction {
 			public void actionPerformed(ActionEvent ev) {
-				if (checkText()) {
-					textLines.add(entryBar.getText());
-					textLines = sortVectStrings(textLines);
-					textArea.setText(vectorToString(textLines));
-					//mainText = _resultArea.getText();
-					entryBar.setText("");
-					//inputBar.setBackground(entryBg);
-				}
-				else {
-					statusText.setText("Incorrect line above: try again");
+				ArrayList<String> inputLines = new ArrayList<String>();
+				inputLines = pasteCode(entryBar.getText());
+				for(int i = 0; i < inputLines.size(); i++){
+					if (checkText(inputLines.get(i))) {
+						//textLines.add(entryBar.getText());
+						textLines.add(inputLines.get(i));
+						textLines = sortVectStrings(textLines);
+						textArea.setText(vectorToString(textLines));
+						entryBar.setText("");
+					}
+					else {
+						statusText.setText("Incorrect line above: try again");
+					}
 				}
 			}
 		}
+		
+		/*
+		 *  This function takes input code and splits it
+		 *  	into individual BASIC lines. This assumes
+		 *  	that all the input is correct
+		 */
+		private ArrayList<String> pasteCode(String str){
+			// List the possible BASIC functions
+			ArrayList<String> func = new ArrayList<String>();
+			func.add("READ"); 
+			func.add("LET");
+			func.add("PRINT");
+			func.add("GOSUB");
+			func.add("GO TO");
+			func.add("DATA");
+			func.add("RETURN");
+			func.add("END");
+			func.add("IF");
+			func.add("FOR");
+			func.add("NEXT");
+			func.add("DEF");
+			
+			/*
+			 *  This function finds every position in the input where
+			 *  	a BASIC function is used
+			 */
+			ArrayList<Integer> funcPos = new ArrayList<Integer>();
+			for(int i = 0; i < func.size(); i++){
+				int curPos = 0;
+				while(str.indexOf(func.get(i), curPos+1) > 0){
+					curPos = str.indexOf(func.get(i), curPos+1);
+					funcPos.add(curPos);
+				}
+			}
+			
+			/*
+			 *  This functions goes through the entire input and searches
+			 *  	for a number followed by a spaced followed by two capital
+			 *  	letters (ie ## LL). It then checks the position of the first
+			 *  	letter with the positions found above to verify the beginning
+			 *  	of a new line. It also checks for quotes and ignores what is 
+			 *  	inside them
+			 */
+			ArrayList<Integer> newLinePos = new ArrayList<Integer>();
+			boolean inQuote = false;
+			for(int i = 0; i < str.length(); i++){
+				int newLine = -1;
+				if(isNumber(str.charAt(i))){
+					newLine = i;
+				}
+				if(str.charAt(i) == '"' && !inQuote){
+					inQuote = true;
+				}
+				else if(str.charAt(i) == '"' && inQuote){
+					inQuote = false;
+				}
+				boolean iMoved = false;
+				// go through all numbers at pos
+				while(isNumber(str.charAt(i))){
+					iMoved = true;
+					i++;
+					if(i > str.length()-3) break;
+				}
+				// if i moved, check again for quotes
+				if(str.charAt(i) == '"' && !inQuote && iMoved){
+					inQuote = true;
+				}
+				else if(str.charAt(i) == '"' && inQuote && iMoved){
+					inQuote = false;
+				}
+				if(i > str.length()-3) break;
+				if(str.charAt(i) != ' '){
+					newLine = -1;
+				}
+				else{ // if space after number
+				    i++;
+					if(i > str.length() - 3) break;
+					if(isLetter(str.charAt(i)) && isLetter(str.charAt(i+1))){
+						if(funcPos.contains(i) && !inQuote){
+							newLinePos.add(newLine);
+						}
+					}
+					else if(str.charAt(i) == '"' && !inQuote){
+						inQuote = true;
+					}
+					else if(str.charAt(i) == '"' && inQuote){
+						inQuote = false;
+					}
+				}
+			}
+			// split input into ArrayList according to newLine positions
+			ArrayList<String> lines_ = new ArrayList<String>();
+			if(newLinePos.size() > 1){
+				lines_.add(str.substring(0, newLinePos.get(1)-1).trim());
+				
+				for(int i = 2; i < newLinePos.size(); i++){
+					lines_.add(str.substring(newLinePos.get(i-1)-1, newLinePos.get(i)-1).trim());
+				}
+				lines_.add(str.substring(newLinePos.get(newLinePos.size()-1)-1).trim());
+			}
+			else{
+				lines_.add(str.trim());
+			}
+			return lines_;
+		}
 
+		private boolean isNumber(char c){
+			if((c>='0' && c<='9')){
+				return true;
+			}
+			else return false;
+		}
+		private boolean isLetter(char c){
+			if((c>='A' && c<='Z')){
+				return true;
+			}
+			else return false;
+		}
+		
 		public String vectorToString(Vector<String> vect) {
 			String vectString = "";
 			for(int i = 0; i < vect.size(); i++) {
@@ -273,8 +290,8 @@ public class Interface extends BasicInterpreter {
 			return vect;
 		}
 
-		public boolean checkText() {
-			String inputText = entryBar.getText();
+		public boolean checkText(String line_) {
+			String inputText = line_;
 
 
 			boolean correctData = true;
@@ -284,10 +301,10 @@ public class Interface extends BasicInterpreter {
 			System.out.println(hasLineNum + " " + hasFuncName);
 			hilit.removeAllHighlights();
 
-			if (hasLineNum && hasFuncName && !textArea.getText().isEmpty()) {   // match found
+			if (hasLineNum && hasFuncName) {   // match found
 				int end = inputText.length();
 				//hilit.addHighlight(index, end, painter);
-				textArea.setCaretPosition(end);
+				//textArea.setCaretPosition(end);
 				entryBar.setBackground(entryBg);
 			}
 			
@@ -303,17 +320,18 @@ public class Interface extends BasicInterpreter {
 					correctData = false;
 				}
 			}
-			else if(!textArea.getText().isEmpty()){
-				entryBar.setBackground(ERROR_COLOR);
-				correctData = false;
-			}
 			else {
 				entryBar.setBackground(ERROR_COLOR);
 				correctData = false;
 			}
 			return correctData;
 		}
-
+		
+		/*
+		 *  This function takes an input string (linenumber) and
+		 *  	searches for this lines number in the text, if found,
+		 *  	remove the line number from the program.
+		 */
 		private boolean removeLine(String inNum){
 			String num_ = "";
 			for(int i = 0; i < inNum.length(); i++){
@@ -336,10 +354,11 @@ public class Interface extends BasicInterpreter {
 			boolean okFuncName = true;
 			int index1 = inputText.indexOf(" ");
 			String funcName = inputText.substring(index1+1);
-			String funcNames = "DATA,DEF,END,FOR,GO,GOTO,GUSUB,IF," +
+			String funcNames = "DATA,DEF,END,FOR,GO,GOTO,GOSUB,IF," +
 					"LET,NEXT,PRINT,READ,RETURN,";
 			int index2 = funcName.indexOf(" ");
 			int funcSize = funcName.length();
+			System.out.println("CHECK FUN NAME: " + inputText);
 			if (index2 != -1) {
 				funcName = funcName.substring(0, Math.min(index2, funcSize));
 			}
@@ -370,7 +389,7 @@ public class Interface extends BasicInterpreter {
 
 		private boolean checkLineNum(String inputText) {
 			int spaceIndex1 = inputText.indexOf(" ");
-			if (spaceIndex1 >= 0 && 
+			if (spaceIndex1 > 0 && 
 					Character.isDigit(inputText.charAt(spaceIndex1 - 1)) &&
 					Character.isLetter(inputText.charAt(spaceIndex1 + 1))) {
 				return true;
@@ -422,14 +441,7 @@ public class Interface extends BasicInterpreter {
 	
 	public Interface() {
 		super();
-		gui = new GUI();
+		GUI gui = new GUI();
 		gui.main();
-	}
-	
-	public void setText(Vector vect) {
-		gui.textLines = vect; 
-		//gui.main();
-		//gui.textArea.setText("Hello");
-		//gui.repaint();
 	}
 }

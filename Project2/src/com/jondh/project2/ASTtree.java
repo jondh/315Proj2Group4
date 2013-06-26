@@ -1,6 +1,12 @@
 /*
  *  AUTHOR: Jonathan Harrison
- *  LAST MODIFIED: 6/23/2013
+ *  LAST MODIFIED: 6/25/2013
+ *  
+ *  CSCE 315 SUMMER 2013
+ *  PROJECT 2
+ *  
+ *  This class defines the AST (abstract syntax tree) for the 
+ *  	BASIC compiler. 
  */
 
 package com.jondh.project2;
@@ -378,17 +384,21 @@ public class ASTtree {
 		ASTfor(String nVar, String nIni, String toCond, Double step, int lnNum){
 			forVar = nVar;
 			initialValue = nIni;
+			System.out.println("KHFKSDJHF "+toCond);
 			toCond_ = toCond;
 			stepBy = step;
 			linenumber = lnNum;
 			nodes.put(lnNum, this);
-			forNodes.put(nVar, this);
 			programLine = linenumber + " FOR " + forVar + " = " + initialValue + 
-					" TO " + until + " STEP " + step;
+					" TO " + toCond;
+			if(step != 1.0){
+				programLine += " STEP " + step;
+			}
 		}
 		
 		public void eval(){
 			if(initial == true){ //Initial input var to expression
+				forNodes.put(forVar, this);
 				Double evalExpr = eval1.evalExpr(initialValue)-stepBy;
 				data1.updateVar(forVar, evalExpr);
 				initial = false;

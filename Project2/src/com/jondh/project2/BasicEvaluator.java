@@ -1,6 +1,14 @@
 /*
  *  AUTHOR: Jonathan Harrison
- *  LAST MODIFIED: 6/23/2013
+ *  LAST MODIFIED: 6/25/2013
+ *  
+ *  CSCE 315 SUMMER 2013
+ *  PROJECT 2
+ *  
+ *  This class defines evaulator for this BASIC compiler. At its core
+ *  	is a JavaScript engine that evaluates an expression. The rest
+ *  	of the class involves converting a BASIC statement into an 
+ *  	equivalent JavaScript statement.
  */
 
 package com.jondh.project2;

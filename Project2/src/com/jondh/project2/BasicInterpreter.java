@@ -1,3 +1,14 @@
+/*
+ *  AUTHOR: Matthew Kocmoud AND Jonathan Harrison
+ *  LAST MODIFIED: 6/25/2013
+ *  
+ *  CSCE 315 SUMMER 2013
+ *  PROJECT 2
+ *  
+ *  This class interprets the input data and puts it
+ *  	into the AST with the approiate structure.
+ */
+
 package com.jondh.project2;
 
 import java.util.ArrayList;
@@ -159,14 +170,12 @@ public class BasicInterpreter {
 		if (stepIndex > 0) {
 			stepStr = lineText.substring(stepIndex+4, lineText.length()).trim();
 			lineText = lineText.substring(0, stepIndex-1).trim();
-			
 			stepNum = Double.valueOf(stepStr);
 		}
 		
 		varStr = lineText.substring(0, equalIndex-1).trim();
 		numStr = lineText.substring(equalIndex+1, toIndex-1).trim();
 		toStr = lineText.substring(toIndex+2).trim();
-
 		ASTtree.ASTfor forState = tree.new ASTfor(varStr,numStr,toStr,stepNum,lineNum);
 		forNodeMap.put(varStr, forState);
 		if (forLoop) {

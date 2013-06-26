@@ -1,6 +1,12 @@
 /*
  *  AUTHOR: Jonathan Harrison
- *  LAST MODIFIED: 6/23/2013
+ *  LAST MODIFIED: 6/25/2013
+ *  
+ *  CSCE 315 SUMMER 2013
+ *  PROJECT 2
+ *  
+ *  This class defines the data used by this BASIC compiler.
+ *  	It stores all the variables, lists, and functions defined.
  */
 
 package com.jondh.project2;
