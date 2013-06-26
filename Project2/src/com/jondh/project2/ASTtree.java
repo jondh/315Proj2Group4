@@ -61,13 +61,11 @@ public class ASTtree {
     			printNode = returnNode.remove(returnNode.size()-1);
     		}
     		printNode = printNode.leftnode;
-    		//System.out.println(printNode.programLine);
     		if(printNode == null) break;
     		printReturn.add(printNode.programLine);
     		if(printNode.rightnode != null){
     			returnNode.add(printNode); //get node to go back to
     			printNode = printNode.rightnode;
-        		//System.out.println(printNode.programLine);
     			printReturn.add(printNode.programLine);
     		}
     	}
@@ -125,7 +123,6 @@ public class ASTtree {
 			nodes.put(lnNum, this);
 			programLine = linenumber + " READ ";
 			for(int i = 0; i < variables.size(); i++){
-				System.out.println("!TREE READ: " + variables.get(i));
 				programLine += variables.get(i);
 				if(i<variables.size()-1){
 					programLine += ", ";
@@ -230,7 +227,6 @@ public class ASTtree {
 			nodes.put(lnNum, this);
 			programLine += linenumber+" PRINT ";
 			for(int i = 0; i < items.size(); i++){
-				System.out.println("IN TREE: " + items.get(i).statement + " " + items.get(i).lineType);
 				programLine += items.get(i).statement + items.get(i).lineType;
 			}
 		}
@@ -384,7 +380,6 @@ public class ASTtree {
 		ASTfor(String nVar, String nIni, String toCond, Double step, int lnNum){
 			forVar = nVar;
 			initialValue = nIni;
-			System.out.println("KHFKSDJHF "+toCond);
 			toCond_ = toCond;
 			stepBy = step;
 			linenumber = lnNum;

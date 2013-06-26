@@ -6,7 +6,7 @@
  *  PROJECT 2
  *  
  *  This class defines the GUI used by this BASIC compiler. It
- *  	gets BASIC lines and passes them onto the intepreter as
+ *  	gets BASIC lines and passes them onto the interpreter as
  *  	well as displaying the BASIC code and output.
  */
 
@@ -59,15 +59,10 @@ public class Interface extends BasicInterpreter {
 		Color  ERROR_COLOR = Color.PINK;
 		final Color entryBg;
 		String identicalLine = "";
+		JPanel content;
 
 		public GUI() {
-			textArea.setText(vectorToString(textLines));
-			textArea.setColumns(75);
-			textArea.setLineWrap(true);
-			textArea.setRows(20);
-			textArea.setWrapStyleWord(true);
-			textArea.setEditable(false);
-			JScrollPane scrollingArea = new JScrollPane(textArea);
+			setTextButtonsContent();
 
 			hilit = new DefaultHighlighter();
 			painter = new DefaultHighlighter.DefaultHighlightPainter(HILIT_COLOR);
@@ -76,35 +71,44 @@ public class Interface extends BasicInterpreter {
 	        textArea.setFont(font);
 			entryBg = entryBar.getBackground();
 			entryBar.getDocument().addDocumentListener(this);
+			statusText.setHorizontalAlignment(getX()/2);
+			
+			this.setContentPane(content);
+			this.setTitle("TextAreaDemo B");
+			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			this.pack();
 
-			//... Get the content pane, set layout, add to center
-			JPanel content = new JPanel();
+			InputMap im = entryBar.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+			ActionMap am = entryBar.getActionMap();
+			im.put(KeyStroke.getKeyStroke("ENTER"), ENTER);
+			am.put(ENTER, new EnterText());
+		}
+
+		private void setTextButtonsContent() {
+			textArea.setText(vectorToString(textLines));
+			textArea.setColumns(75);
+			textArea.setLineWrap(true);
+			textArea.setRows(20);
+			textArea.setWrapStyleWord(true);
+			textArea.setEditable(false);
+			
+			JScrollPane scrollingArea = new JScrollPane(textArea);
+			content = new JPanel();
 			content.setLayout(new BorderLayout());
 			content.add(scrollingArea, BorderLayout.PAGE_START);
 			content.add(entryBar, BorderLayout.CENTER);
 			content.add(statusText, BorderLayout.SOUTH);
 			content.add(listProgram, BorderLayout.BEFORE_LINE_BEGINS);
 			content.add(runProgram, BorderLayout.AFTER_LINE_ENDS);
-			statusText.setHorizontalAlignment(getX()/2);
-			//... Set window characteristics.
-			this.setContentPane(content);
-			this.setTitle("TextAreaDemo B");
-			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			this.pack();
-
+			
 			listProgram.addActionListener(this);
 			runProgram.addActionListener(this);
-			listProgram.setToolTipText("Click this button to list the program");
-			runProgram.setToolTipText("Click this button to run the program");
+			listProgram.setToolTipText("Click this to list the program");
+			runProgram.setToolTipText("Click this to run the program");
 			listProgram.setMnemonic(KeyEvent.VK_M);
 			runProgram.setMnemonic(KeyEvent.VK_N);
 			listProgram.setActionCommand("LISTPROGRAM");
 			runProgram.setActionCommand("RUNPROGRAM");
-
-			InputMap im = entryBar.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-			ActionMap am = entryBar.getActionMap();
-			im.put(KeyStroke.getKeyStroke("ENTER"), ENTER);
-			am.put(ENTER, new EnterText());
 		}
 
 		class EnterText extends AbstractAction {
@@ -113,7 +117,6 @@ public class Interface extends BasicInterpreter {
 				inputLines = pasteCode(entryBar.getText());
 				for(int i = 0; i < inputLines.size(); i++){
 					if (checkText(inputLines.get(i))) {
-						//textLines.add(entryBar.getText());
 						textLines.add(inputLines.get(i));
 						textLines = sortVectStrings(textLines);
 						textArea.setText(vectorToString(textLines));
@@ -237,6 +240,7 @@ public class Interface extends BasicInterpreter {
 			}
 			else return false;
 		}
+		
 		private boolean isLetter(char c){
 			if((c>='A' && c<='Z')){
 				return true;
@@ -256,6 +260,10 @@ public class Interface extends BasicInterpreter {
 			return vectString;
 		}
 
+		/*
+		 *  This function sorts a vector of strings accurately based on
+		 *  the line number. This sorting: 2,19,21 Normal sorting: 19,2,21
+		 */
 		public Vector<String> sortVectStrings(Vector<String> vect) {
 			Collections.sort(vect, new Comparator<String>()
 					{
@@ -269,7 +277,6 @@ public class Interface extends BasicInterpreter {
 					num2 = s2.substring(0, index2);
 
 					if (num1.equalsIgnoreCase(num2)) {
-						System.out.println("Found identical number\n");
 						identicalLine = s2;
 						statusText.setText("Deleting an identical line number");
 					}
@@ -281,7 +288,6 @@ public class Interface extends BasicInterpreter {
 			if (identicalLine.length() != 0) {
 				for (int i = 0; i < vect.size(); i++) {
 					if (vect.elementAt(i) == identicalLine) {
-						System.out.println("identicalLine: " + i);
 						vect.removeElementAt(i);
 						identicalLine = "";
 					}
@@ -293,18 +299,13 @@ public class Interface extends BasicInterpreter {
 		public boolean checkText(String line_) {
 			String inputText = line_;
 
-
 			boolean correctData = true;
 			boolean hasLineNum = checkLineNum(inputText);
 			boolean hasFuncName = checkFuncName(inputText);
 
-			System.out.println(hasLineNum + " " + hasFuncName);
 			hilit.removeAllHighlights();
 
-			if (hasLineNum && hasFuncName) {   // match found
-				int end = inputText.length();
-				//hilit.addHighlight(index, end, painter);
-				//textArea.setCaretPosition(end);
+			if (hasLineNum && hasFuncName) {
 				entryBar.setBackground(entryBg);
 			}
 			
@@ -342,7 +343,6 @@ public class Interface extends BasicInterpreter {
 			}
 			for(int i = 0; i < textLines.size(); i++){
 				if(textLines.get(i).indexOf(num_) == 0){
-					System.out.println(i);
 					textLines.remove(textLines.get(i));
 					return true;
 				}
@@ -358,7 +358,6 @@ public class Interface extends BasicInterpreter {
 					"LET,NEXT,PRINT,READ,RETURN,";
 			int index2 = funcName.indexOf(" ");
 			int funcSize = funcName.length();
-			System.out.println("CHECK FUN NAME: " + inputText);
 			if (index2 != -1) {
 				funcName = funcName.substring(0, Math.min(index2, funcSize));
 			}
@@ -402,7 +401,6 @@ public class Interface extends BasicInterpreter {
 			return true;
 		}
 
-		//============================================================= main
 		public void main() {
 			JFrame win = new GUI();
 			win.setResizable(false);
@@ -418,22 +416,25 @@ public class Interface extends BasicInterpreter {
 		public void removeUpdate(DocumentEvent e) {
 		}
 
+		/*
+		 * This function details what is done when the buttons 'List Program'
+		 * or 'Run Program' are pressed.
+		 */
 		public void actionPerformed(ActionEvent e) {
 			if ("LISTPROGRAM".equals(e.getActionCommand())) {
-				System.out.println("ListProgram clicked");
 				ArrayList<String> program_ = saveToAST(textLines);
 				Vector<String> programVector = new Vector<String>();
+				
 				for(int i = 0; i < program_.size(); i++){
 					programVector.add(program_.get(i));
 				}
 				textArea.setText(vectorToString(programVector));
 			}
-			else {
-				saveToAST(textLines);
-				System.out.println("RunProgram clicked");
-				Vector<String> textLines2 = runFromAST();
+			else { // 'Run Program' pressed
+				saveToAST(textLines); // be sure AST is non-empty
+				Vector<String> textLinesCopy = runFromAST();
 				
-				textArea.setText(vectorToString(textLines2));
+				textArea.setText(vectorToString(textLinesCopy));
 				runFromAST();
 			}
 		}

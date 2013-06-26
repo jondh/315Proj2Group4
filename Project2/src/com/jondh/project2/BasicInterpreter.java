@@ -6,7 +6,7 @@
  *  PROJECT 2
  *  
  *  This class interprets the input data and puts it
- *  	into the AST with the approiate structure.
+ *  	into the AST with the appropriate structure.
  */
 
 package com.jondh.project2;
@@ -21,10 +21,11 @@ import com.jondh.project2.ASTtree.printStruct;
 public class BasicInterpreter {
 
 	ASTtree tree;
-	ASTtree.ASTnode topRoot;
-	ASTtree.ASTnode root;
+	ASTtree.ASTnode topRoot; 
 	ASTtree.ASTnode forRoot;
-	Map<String, ASTtree.ASTnode> forNodeMap = new HashMap<String, ASTtree.ASTnode>();
+	ASTtree.ASTnode root;
+	Map<String, ASTtree.ASTnode> forNodeMap = 
+			new HashMap<String, ASTtree.ASTnode>();
 	LineType lineType;
 	static Interface gui;
 	int lineNum = 0;
@@ -42,11 +43,13 @@ public class BasicInterpreter {
 
 	protected ArrayList<String> saveToAST(Vector<String> codeLines) {
 		LineType lineType = LineType.DATA;
+		
 		tree = new ASTtree();
 		topRoot = tree.new ASTnode();
 		root = tree.new ASTnode();
 		forRoot = tree.new ASTnode();
 		root = tree.root;
+		
 		for (int iter = 0; iter < codeLines.size(); ++iter) {
 			lineText = codeLines.get(iter);
 			lineType = findLineType();
@@ -68,16 +71,13 @@ public class BasicInterpreter {
 	}
 
 	private void readToAST() {
-		//ASTtree.ASTnode newRoot = tree.new ASTnode();
-		//System.out.println("LineType: "+lineType);
-		if (lineType == LineType.IF) readIf();
-		else if (lineType == LineType.DIM) readDim();
-		else if (lineType == LineType.FOR) readFor();
-		else if (lineType == LineType.LET) readLet();
+		if (lineType == LineType.DATA) readData();
 		else if (lineType == LineType.DEF) readDef();
+		else if (lineType == LineType.FOR) readFor();
+		else if (lineType == LineType.IF) readIf();
+		else if (lineType == LineType.LET) readLet();
 		else if (lineType == LineType.NEXT) readNext();
 		else if (lineType == LineType.PRINT) readPrint();
-		else if (lineType == LineType.DATA) readData();
 		else if (lineType == LineType.READ) readRead();
 		else if (lineType == LineType.GO || lineType == LineType.GOSUB) 
 			readGoToGoSub();
@@ -85,6 +85,9 @@ public class BasicInterpreter {
 			readEndReturn();
 	}
 
+	/*
+	 * These functions extract data needed to create AST nodes
+	 */
 	private void readData() {
 		ArrayList<Double> dataList = new ArrayList<Double>();
 		String dataStr = "";
@@ -141,7 +144,6 @@ public class BasicInterpreter {
 			eval = lineText.substring(0, thenIndex).trim();
 			lineNumStr = lineText.substring(thenIndex + 4, lineText.length());
 			goToNum = Integer.valueOf(lineNumStr.trim());
-			System.out.println("eval: " + eval + " goto: " + goToNum);
 		}
 		ASTtree.ASTif ifState = tree.new ASTif(eval, goToNum, lineNum);
 		if (forLoop) {
@@ -152,14 +154,9 @@ public class BasicInterpreter {
 		root = ifState;
 	}
 
-	private void readDim() {
-		// TODO Auto-generated method stub
-	}
-
 	private void readFor() {
-		//String nVar, String nIni, String toCond, Double step, int lnNum
-		int stepIndex = lineText.indexOf("STEP");
-		int equalIndex = lineText.indexOf("=");
+		int stepInd = lineText.indexOf("STEP");
+		int equalInd = lineText.indexOf("=");
 		int toIndex = lineText.indexOf("TO");
 		String stepStr = "";
 		String varStr = "";
@@ -167,14 +164,14 @@ public class BasicInterpreter {
 		String toStr = "";
 		double stepNum = 1.0;
 
-		if (stepIndex > 0) {
-			stepStr = lineText.substring(stepIndex+4, lineText.length()).trim();
-			lineText = lineText.substring(0, stepIndex-1).trim();
+		if (stepInd > 0) {
+			stepStr = lineText.substring(stepInd+4, lineText.length()).trim();
+			lineText = lineText.substring(0, stepInd-1).trim();
 			stepNum = Double.valueOf(stepStr);
 		}
 		
-		varStr = lineText.substring(0, equalIndex-1).trim();
-		numStr = lineText.substring(equalIndex+1, toIndex-1).trim();
+		varStr = lineText.substring(0, equalInd-1).trim();
+		numStr = lineText.substring(equalInd+1, toIndex-1).trim();
 		toStr = lineText.substring(toIndex+2).trim();
 		ASTtree.ASTfor forState = tree.new ASTfor(varStr,numStr,toStr,stepNum,lineNum);
 		forNodeMap.put(varStr, forState);
@@ -184,18 +181,14 @@ public class BasicInterpreter {
 		}
 		else root.leftnode = forState;
 		root = forState;
-		
 		forLoop = true;
 	}
 
 	private void readLet() {
-		//ASTfor(String nVar, String nIni, String toCond, Double step, int lnNum){
 		int equalIndex = lineText.indexOf("=");
 		String eqLeft = lineText.substring(0, equalIndex).trim();
 		String eqRight = lineText.substring(equalIndex+1, lineText.length()).trim();
 
-		System.out.println("left: " + eqLeft + " right: " + eqRight);
-		
 		ASTtree.ASTlet letState = tree.new ASTlet(eqLeft, eqRight, lineNum);
 		if (forLoop) {
 			root.rightnode = letState;
@@ -209,7 +202,6 @@ public class BasicInterpreter {
 		int equalIndex = lineText.indexOf("=");
 		String eqLeft = lineText.substring(0, equalIndex).trim();
 		String eqRight = lineText.substring(equalIndex+1, lineText.length()).trim();
-		System.out.println("DEF!! left: " + eqLeft + " right: " + eqRight);
 		ASTtree.ASTdef defState = tree.new ASTdef(eqLeft, eqRight, lineNum);
 		if (forLoop) {
 			root.rightnode = defState;
@@ -220,7 +212,6 @@ public class BasicInterpreter {
 	}
 
 	private void readNext() {
-		System.out.println(lineText);
 		ASTtree.ASTnext nextState = tree.new ASTnext(lineText, lineNum);
 		if (forLoop) {
 			root.rightnode = nextState;
@@ -228,21 +219,15 @@ public class BasicInterpreter {
 		}
 		else root.leftnode = nextState;
 		if(forNodeMap.containsKey(lineText)){
-			System.out.println("formatch");
 			root = forNodeMap.get(lineText);
-		}
-		else{
-			System.out.println("No next match");
 		}
 		forLoop = false;
 	}
 
 	private void readGoToGoSub() {
 		int goTo = 0;
-		System.out.println(lineType);
 		if (lineType == LineType.GO || lineType == LineType.GOTO) {
 			goTo = Integer.valueOf(lineText.substring(2).trim());
-			System.out.println("GOTO!!! => " + goTo);
 			ASTtree.ASTgoto goToState = tree.new ASTgoto(goTo, lineNum);
 			if (forLoop) {
 				root.rightnode = goToState;
@@ -279,9 +264,7 @@ public class BasicInterpreter {
 			while (index != -1 && index < lineText.length()) {
 				printFormat = lineText.charAt(index);
 				printStr = lineText.substring(0, index).trim();
-				System.out.println(printStr);
 				elem = tree.new printStruct(printStr, printFormat);
-				System.out.println("PRINT str: " + printStr + " form: " + printFormat);
 				printList.add(elem);
 				lineText = lineText.substring(index+1);
 				index = findCommaColon();
@@ -316,6 +299,10 @@ public class BasicInterpreter {
 		return printChar;
 	}
 
+	/*
+	 * This function returns the index of a comma or colon, whichever first,
+	 * or -1 if neither found
+	 */
 	private int findCommaColon() {
 		int commaIndex = lineText.indexOf(",");
 		int colonIndex = lineText.indexOf(";");
@@ -349,13 +336,16 @@ public class BasicInterpreter {
 		}
 	}
 
+	/*
+	 * This function extracts the line type, while eating the type name, to
+	 * save effort in future extractions
+	 */
 	private LineType findLineType() {
 		String lineNumStr = " ";
 		String lineTypeStr = " ";
 		int spaceIndex = lineText.indexOf(" ");
 		lineNumStr = lineText.substring(0, spaceIndex);
 		lineNum = Integer.valueOf(lineNumStr);
-		System.out.println("Line Number: " + lineNum);
 		lineText = lineText.substring(spaceIndex + 1);
 
 		spaceIndex = lineText.indexOf(" ");

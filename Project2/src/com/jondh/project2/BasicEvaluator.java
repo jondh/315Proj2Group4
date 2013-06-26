@@ -5,7 +5,7 @@
  *  CSCE 315 SUMMER 2013
  *  PROJECT 2
  *  
- *  This class defines evaulator for this BASIC compiler. At its core
+ *  This class defines evaluator for this BASIC compiler. At its core
  *  	is a JavaScript engine that evaluates an expression. The rest
  *  	of the class involves converting a BASIC statement into an 
  *  	equivalent JavaScript statement.
@@ -231,7 +231,6 @@ public class BasicEvaluator {
 			int pos = inString.indexOf('^');
 			String prevEpr = getPrevExpression(pos, inString);
 			String nextEpr = getNextExpression(pos, inString);
-			System.out.println(inString + " " + prevEpr + " " + nextEpr);
 			inString = inString.replace(prevEpr+"^ "+nextEpr, "Math.pow("+prevEpr+","+nextEpr+")");
 		}
 		return inString;
@@ -239,7 +238,7 @@ public class BasicEvaluator {
 	
 	/*
 	 *  This function defines an ArrayList of BASIC functions paired
-	 *  	with their approiate JavaScript conversions
+	 *  	with their appropriate JavaScript conversions
 	 */
 	private ArrayList<FuncData> getReplaced(){
 		ArrayList<FuncData> functionMap = new ArrayList<FuncData>();
